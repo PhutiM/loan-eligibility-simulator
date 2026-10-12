@@ -48,7 +48,7 @@ Invalid requests return HTTP `400` with an `error` and a `details` array contain
 
 ## GitHub Pages deployment
 
-`.github/workflows/deploy.yml` runs backend tests, frontend tests with 80% coverage thresholds, frontend lint, and the production build on pull requests. Pushes to `main` and manual workflow runs also publish the frontend to GitHub Pages. In the repository settings, enable **Settings → Pages → Build and deployment → GitHub Actions**.
+`.github/workflows/deploy.yml` runs backend tests, frontend tests with 80% coverage thresholds, frontend lint, and the production build on pull requests and pushes to `main`. It publishes the frontend to GitHub Pages on pushes to `main` and manual workflow runs after the `VITE_API_BASE_URL` Actions variable has been configured. Until then, verification still runs and the deployment job is skipped. In the repository settings, enable **Settings → Pages → Build and deployment → GitHub Actions**.
 
 The backend is not deployed by this workflow; host it separately. Add the repository Actions variable `VITE_API_BASE_URL` with the backend's public HTTPS origin (for example, `https://api.example.com`, without a trailing slash). The workflow uses the repository name as the GitHub Pages base path.
 
