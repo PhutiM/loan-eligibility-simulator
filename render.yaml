@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: loan-eligibility-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.backend
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: FRONTEND_ORIGIN
+        value: https://phutim.github.io
