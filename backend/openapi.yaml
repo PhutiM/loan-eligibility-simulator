@@ -1,0 +1,488 @@
+openapi: 3.0.3
+info:
+  title: Loan Eligibility Simulator API
+  version: 1.0.0
+  description: API for loan products, eligibility assessment, and repayment estimates.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+tags:
+  - name: Loans
+    description: Loan products, eligibility, rates, and validation constraints
+  - name: Health
+    description: Service health
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Check API health
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: loan-eligibility-api
+  /api/loans/products:
+    get:
+      tags: [Loans]
+      summary: List available loan products
+      responses:
+        '200':
+          description: Available loan products
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LoanProduct'
+              example:
+                products:
+                  - id: personal_loan
+                    name: Personal Loan
+                    description: Flexible personal financing for various needs
+                    minAmount: 5000
+                    maxAmount: 300000
+                    minTerm: 6
+                    maxTerm: 60
+                    interestRateRange:
+                      min: 10.5
+                      max: 18.5
+                    purposes:
+                      - debt_consolidation
+                      - home_improvement
+                      - education
+                      - medical
+                      - other
+                  - id: vehicle_loan
+                    name: Vehicle Finance
+                    description: Financing for new and used vehicles
+                    minAmount: 50000
+                    maxAmount: 1500000
+                    minTerm: 12
+                    maxTerm: 72
+                    interestRateRange:
+                      min: 8.5
+                      max: 15
+                    purposes: [new_vehicle, used_vehicle]
+  /api/loans/validation-rules:
+    get:
+      tags: [Loans]
+      summary: Get form validation constraints
+      responses:
+        '200':
+          description: Validation rules used for loan eligibility applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationRules'
+  /api/loans/eligibility:
+    post:
+      tags: [Loans]
+      summary: Check loan eligibility
+      description: >
+        Evaluates the applicant and returns eligibility, a recommended loan,
+        and affordability metrics. Credit score is optional and defaults to 300.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EligibilityRequest'
+            example:
+              personalInfo:
+                age: 35
+                employmentStatus: employed
+                employmentDuration: 24
+              financialInfo:
+                monthlyIncome: 25000
+                monthlyExpenses: 15000
+                existingDebt: 5000
+                creditScore: 650
+              loanDetails:
+                loanType: personal_loan
+                requestedAmount: 150000
+                loanTerm: 24
+                loanPurpose: home_improvement
+      responses:
+        '200':
+          description: Eligibility assessment and affordability analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibilityResponse'
+              example:
+                eligibilityResult:
+                  isEligible: true
+                  approvalLikelihood: 85
+                  riskCategory: low
+                  decisionReason: Strong income-to-expense ratio and manageable existing debt
+                recommendedLoan:
+                  maxAmount: 180000
+                  recommendedAmount: 150000
+                  interestRate: 12.5
+                  monthlyPayment: 7096.1
+                  totalRepayment: 170306.3
+                affordabilityAnalysis:
+                  disposableIncome: 10000
+                  debtToIncomeRatio: 20
+                  loanToIncomeRatio: 60
+                  affordabilityScore: good
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /api/loans/calculate-rate:
+    post:
+      tags: [Loans]
+      summary: Calculate the interest rate and repayment schedule
+      description: Returns an estimated interest rate and an amortizing monthly payment schedule for the selected product.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateCalculationRequest'
+            example:
+              loanAmount: 150000
+              loanTerm: 24
+              creditScore: 650
+              loanType: personal_loan
+      responses:
+        '200':
+          description: Rate estimate and payment schedule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateCalculationResponse'
+              example:
+                interestRate: 12.5
+                monthlyPayment: 7096.1
+                totalInterest: 20306.3
+                totalRepayment: 170306.3
+                paymentSchedule:
+                  - month: 1
+                    payment: 7096.1
+                    principal: 5533.6
+                    interest: 1562.5
+                    balance: 144466.4
+                  - month: 24
+                    payment: 7096
+                    principal: 7022.85
+                    interest: 73.15
+                    balance: 0
+        '400':
+          $ref: '#/components/responses/ValidationError'
+components:
+  responses:
+    ValidationError:
+      description: The request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            error: Validation failed
+            details:
+              - field: personalInfo.age
+                message: personalInfo.age must be at least 18
+  schemas:
+    LoanProduct:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - minAmount
+        - maxAmount
+        - minTerm
+        - maxTerm
+        - interestRateRange
+        - purposes
+      properties:
+        id:
+          type: string
+          enum: [personal_loan, vehicle_loan]
+        name:
+          type: string
+        description:
+          type: string
+        minAmount:
+          type: number
+          format: double
+        maxAmount:
+          type: number
+          format: double
+        minTerm:
+          type: integer
+        maxTerm:
+          type: integer
+        interestRateRange:
+          type: object
+          required: [min, max]
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+        purposes:
+          type: array
+          items:
+            type: string
+    EligibilityRequest:
+      type: object
+      required: [personalInfo, financialInfo, loanDetails]
+      properties:
+        personalInfo:
+          type: object
+          required: [age, employmentStatus, employmentDuration]
+          properties:
+            age:
+              type: integer
+              minimum: 18
+              maximum: 65
+            employmentStatus:
+              type: string
+              enum: [employed, self_employed, unemployed, retired]
+            employmentDuration:
+              type: integer
+              minimum: 3
+              description: Employment duration in months
+        financialInfo:
+          type: object
+          required: [monthlyIncome, monthlyExpenses, existingDebt]
+          properties:
+            monthlyIncome:
+              type: number
+              minimum: 5000
+            monthlyExpenses:
+              type: number
+              minimum: 0
+            existingDebt:
+              type: number
+              minimum: 0
+              description: Existing monthly debt obligations
+            creditScore:
+              type: integer
+              minimum: 300
+              maximum: 850
+              nullable: true
+        loanDetails:
+          type: object
+          required: [requestedAmount, loanTerm, loanPurpose]
+          properties:
+            loanType:
+              type: string
+              enum: [personal_loan, vehicle_loan]
+              default: personal_loan
+              description: Loan product; product-specific amount, term, and purpose limits apply.
+            requestedAmount:
+              type: number
+              minimum: 5000
+              maximum: 1500000
+              description: Must be within the selected product's amount range.
+            loanTerm:
+              type: integer
+              minimum: 6
+              maximum: 72
+              description: Must be within the selected product's term range, in months.
+            loanPurpose:
+              type: string
+              enum:
+                - debt_consolidation
+                - home_improvement
+                - education
+                - medical
+                - other
+                - new_vehicle
+                - used_vehicle
+    EligibilityResponse:
+      type: object
+      required: [eligibilityResult, recommendedLoan, affordabilityAnalysis]
+      properties:
+        eligibilityResult:
+          type: object
+          required: [isEligible, approvalLikelihood, riskCategory, decisionReason]
+          properties:
+            isEligible:
+              type: boolean
+            approvalLikelihood:
+              type: integer
+              minimum: 5
+              maximum: 95
+            riskCategory:
+              type: string
+              enum: [low, medium, high]
+            decisionReason:
+              type: string
+        recommendedLoan:
+          type: object
+          required: [maxAmount, recommendedAmount, interestRate, monthlyPayment, totalRepayment]
+          properties:
+            maxAmount:
+              type: number
+            recommendedAmount:
+              type: number
+            interestRate:
+              type: number
+            monthlyPayment:
+              type: number
+            totalRepayment:
+              type: number
+        affordabilityAnalysis:
+          type: object
+          required: [disposableIncome, debtToIncomeRatio, loanToIncomeRatio, affordabilityScore]
+          properties:
+            disposableIncome:
+              type: number
+            debtToIncomeRatio:
+              type: number
+              description: Existing debt as a percentage of monthly income
+            loanToIncomeRatio:
+              type: number
+            affordabilityScore:
+              type: string
+              enum: [good, fair, poor]
+    RateCalculationRequest:
+      type: object
+      required: [loanAmount, loanTerm, creditScore, loanType]
+      properties:
+        loanAmount:
+          type: number
+          minimum: 1
+        loanTerm:
+          type: integer
+          minimum: 1
+          description: Loan term in months, also restricted by product limits
+        creditScore:
+          type: integer
+          minimum: 300
+          maximum: 850
+        loanType:
+          type: string
+          enum: [personal_loan, vehicle_loan]
+    RateCalculationResponse:
+      type: object
+      required: [interestRate, monthlyPayment, totalInterest, totalRepayment, paymentSchedule]
+      properties:
+        interestRate:
+          type: number
+        monthlyPayment:
+          type: number
+        totalInterest:
+          type: number
+        totalRepayment:
+          type: number
+        paymentSchedule:
+          type: array
+          items:
+            type: object
+            required: [month, payment, principal, interest, balance]
+            properties:
+              month:
+                type: integer
+              payment:
+                type: number
+              principal:
+                type: number
+              interest:
+                type: number
+              balance:
+                type: number
+    ValidationRules:
+      type: object
+      description: Validation constraints provided for the eligibility form.
+      properties:
+        personalInfo:
+          type: object
+          properties:
+            age:
+              $ref: '#/components/schemas/NumberValidationRule'
+            employmentStatus:
+              type: object
+              properties:
+                required:
+                  type: boolean
+                options:
+                  type: array
+                  items:
+                    type: string
+                errorMessage:
+                  type: string
+            employmentDuration:
+              $ref: '#/components/schemas/NumberValidationRule'
+        financialInfo:
+          type: object
+          properties:
+            monthlyIncome:
+              $ref: '#/components/schemas/NumberValidationRule'
+            monthlyExpenses:
+              $ref: '#/components/schemas/NumberValidationRule'
+            existingDebt:
+              $ref: '#/components/schemas/NumberValidationRule'
+            creditScore:
+              $ref: '#/components/schemas/NumberValidationRule'
+        loanDetails:
+          type: object
+          properties:
+            loanType:
+              type: object
+              properties:
+                required:
+                  type: boolean
+                options:
+                  type: array
+                  items:
+                    type: string
+                errorMessage:
+                  type: string
+            loanPurpose:
+              type: object
+              properties:
+                required:
+                  type: boolean
+                errorMessage:
+                  type: string
+            requestedAmount:
+              $ref: '#/components/schemas/NumberValidationRule'
+            loanTerm:
+              $ref: '#/components/schemas/NumberValidationRule'
+    NumberValidationRule:
+      type: object
+      properties:
+        min:
+          type: number
+        max:
+          type: number
+        integer:
+          type: boolean
+        required:
+          type: boolean
+        errorMessage:
+          type: string
+    ValidationError:
+      type: object
+      required: [error, details]
+      properties:
+        error:
+          type: string
+          example: Validation failed
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string

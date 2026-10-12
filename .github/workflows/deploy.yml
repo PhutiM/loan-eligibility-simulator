@@ -1,0 +1,89 @@
+name: CI and GitHub Pages
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test backend
+        run: npm test --workspace backend
+
+      - name: Test frontend with coverage thresholds
+        run: npm run test:coverage --workspace frontend
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Require backend URL for deployment
+        if: github.event_name != 'pull_request'
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "::error::Set the repository Actions variable VITE_API_BASE_URL to the public HTTPS origin of the separately hosted backend."
+            exit 1
+          fi
+          case "$VITE_API_BASE_URL" in
+            https://*) ;;
+            *)
+              echo "::error::VITE_API_BASE_URL must use HTTPS."
+              exit 1
+              ;;
+          esac
+
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: VITE_BASE_PATH="/${GITHUB_REPOSITORY#*/}/" npm run build
+
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
