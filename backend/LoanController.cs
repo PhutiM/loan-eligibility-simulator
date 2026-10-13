@@ -24,11 +24,11 @@ public sealed class LoanController : ControllerBase, ILoanController
 
     [HttpGet("loans/products")]
     public IActionResult GetProducts() =>
-        Ok(new { products = LoanService.Products });
+        Ok(new { products = LoanData.Products });
 
     [HttpGet("loans/validation-rules")]
     public IActionResult GetValidationRules() =>
-        Ok(LoanService.ValidationRules);
+        Ok(LoanData.ValidationRules);
 
     [HttpPost("loans/eligibility")]
     public async Task<IActionResult> CheckEligibility()

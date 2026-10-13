@@ -5,65 +5,6 @@ namespace LoanEligibility.Api;
 
 internal static class LoanService
 {
-    public static readonly LoanProduct[] Products =
-    [
-        new(
-            "personal_loan",
-            "Personal Loan",
-            "Flexible personal financing for various needs",
-            5000,
-            300000,
-            6,
-            60,
-            new InterestRateRange(10.5, 18.5),
-            ["debt_consolidation", "home_improvement", "education", "medical", "other"]),
-        new(
-            "vehicle_loan",
-            "Vehicle Finance",
-            "Financing for new and used vehicles",
-            50000,
-            1500000,
-            12,
-            72,
-            new InterestRateRange(8.5, 15),
-            ["new_vehicle", "used_vehicle"])
-    ];
-
-    public static readonly object ValidationRules = new
-    {
-        personalInfo = new
-        {
-            age = new ValidationRule(18, 65, true, true, null, "Age must be between 18 and 65"),
-            employmentStatus = new ValidationRule(null, null, null, true,
-                ["employed", "self_employed", "unemployed", "retired"],
-                "Please select your employment status"),
-            employmentDuration = new ValidationRule(3, null, true, true, null,
-                "Minimum 3 months employment required")
-        },
-        financialInfo = new
-        {
-            monthlyIncome = new ValidationRule(5000, null, null, true, null,
-                "Minimum monthly income of R5,000 required"),
-            monthlyExpenses = new ValidationRule(0, null, null, true, null,
-                "Please enter your monthly expenses"),
-            existingDebt = new ValidationRule(0, null, null, true, null,
-                "Please enter your existing debt"),
-            creditScore = new ValidationRule(300, 850, true, false, null,
-                "Credit score must be between 300 and 850")
-        },
-        loanDetails = new
-        {
-            loanType = new ValidationRule(null, null, null, true,
-                Products.Select(product => product.Id).ToArray(), "Please select a loan product"),
-            loanPurpose = new ValidationRule(null, null, null, true, null,
-                "Please select a loan purpose"),
-            requestedAmount = new ValidationRule(5000, 300000, null, true, null,
-                "Loan amount must be between R5,000 and R300,000"),
-            loanTerm = new ValidationRule(6, 60, true, true, null,
-                "Loan term must be between 6 and 60 months")
-        }
-    };
-
     public static EligibilityAssessment ValidateEligibilityRequest(JsonElement body)
     {
         var errors = new List<FieldError>();
@@ -79,7 +20,7 @@ internal static class LoanService
             errors.Add(new FieldError("loanDetails", "loanDetails must be an object"));
 
         var loanType = GetString(GetProperty(loanDetails, "loanType")) ?? "personal_loan";
-        var product = Products.FirstOrDefault(item => item.Id == loanType);
+        var product = LoanData.Products.FirstOrDefault(item => item.Id == loanType);
 
         ValidateNumber(GetProperty(personalInfo, "age"), "personalInfo.age", errors,
             min: 18, max: 65, integer: true, errorMessage: "Age must be between 18 and 65");
@@ -110,14 +51,14 @@ internal static class LoanService
 
         ValidateNumber(GetProperty(loanDetails, "requestedAmount"), "loanDetails.requestedAmount",
             errors,
-            min: product?.MinAmount ?? Products[0].MinAmount,
-            max: product?.MaxAmount ?? Products[0].MaxAmount,
+            min: product?.MinAmount ?? LoanData.Products[0].MinAmount,
+            max: product?.MaxAmount ?? LoanData.Products[0].MaxAmount,
             errorMessage: product is null
                 ? "Loan amount must be between R5,000 and R300,000"
                 : $"Loan amount must be between R{FormatNumber(product.MinAmount)} and R{FormatNumber(product.MaxAmount)}");
         ValidateNumber(GetProperty(loanDetails, "loanTerm"), "loanDetails.loanTerm", errors,
-            min: product?.MinTerm ?? Products[0].MinTerm,
-            max: product?.MaxTerm ?? Products[0].MaxTerm,
+            min: product?.MinTerm ?? LoanData.Products[0].MinTerm,
+            max: product?.MaxTerm ?? LoanData.Products[0].MaxTerm,
             integer: true,
             errorMessage: product is null
                 ? "Loan term must be between 6 and 60 months"
@@ -152,7 +93,7 @@ internal static class LoanService
         ValidateNumber(loanTermElement, "loanTerm", errors, min: 1, integer: true);
         ValidateNumber(creditScoreElement, "creditScore", errors, min: 300, max: 850, integer: true);
 
-        var product = Products.FirstOrDefault(item => item.Id == GetString(GetProperty(body, "loanType")));
+        var product = LoanData.Products.FirstOrDefault(item => item.Id == GetString(GetProperty(body, "loanType")));
         if (product is null)
             errors.Add(new FieldError("loanType", "loanType must be personal_loan or vehicle_loan"));
 
@@ -219,7 +160,7 @@ internal static class LoanService
 
     public static EligibilityResponse CalculateEligibility(EligibilityAssessment application)
     {
-        var product = application.Product ?? Products[0];
+        var product = application.Product ?? LoanData.Products[0];
         var creditScore = application.CreditScore ?? 300;
         var disposableIncome = RoundMoney(application.MonthlyIncome - application.MonthlyExpenses);
         var debtToIncomeRatio = RoundMoney(application.ExistingDebt / application.MonthlyIncome * 100);
