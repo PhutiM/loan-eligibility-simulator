@@ -36,7 +36,7 @@ Open <http://localhost:8080>. The frontend container serves the production Vite 
 - `dotnet test backend.test/LoanEligibility.Api.Tests.csproj` — test the backend API
 - `dotnet run --project backend/LoanEligibility.Api.csproj` — start the backend
 
-Swagger UI is available at <http://localhost:3000/api/docs>, and the OpenAPI document is served at <http://localhost:3000/api/openapi.yaml>.
+Swagger UI is available at <http://localhost:3000/api/docs>, and the OpenAPI document is served at <http://localhost:3000/api/openapi.yaml>. The OpenAPI document uses a relative server URL so Swagger's "Try it out" sends requests to the same host serving the documentation, including on Render.
 
 ## Loan API
 
@@ -57,4 +57,4 @@ The Blueprint configures `FRONTEND_ORIGIN=https://phutim.github.io` so browsers 
 
 To deploy an additional Docker-based frontend on Render while keeping GitHub Pages, create a separate **Web Service** from this repository and set **Runtime** to Docker, **Root Directory** to `.`, **Dockerfile Path** to `./Dockerfile.frontend`, and **Health Check Path** to `/`. Set the `API_UPSTREAM` environment variable to the backend's public origin (for example, `https://loan-eligibility-simulator.onrender.com`, without a trailing slash); Render provides the `PORT` variable automatically. Nginx serves the frontend and proxies `/api` requests to the backend. Create this frontend service separately rather than reapplying the root Blueprint, which also defines the API service. The local Docker Compose setup uses `http://backend:3000` as its upstream.
 
-The ASP.NET Core API endpoints are implemented by `LoanController`, which conforms to `ILoanController`. Request validation and loan calculations are kept in the backend service and helper classes. The sample loan products and validation rules are kept separately in `LoanData`.
+Backend C# files are grouped by responsibility: `Controllers` contains `LoanController`, which uses the `ILoanService` interface from `Services`; `Services` contains validation and loan calculations; `Helpers` contains shared parsing and numeric helpers; `Mock` contains sample loan products and validation rules; and `Models` contains request, response, and data records.

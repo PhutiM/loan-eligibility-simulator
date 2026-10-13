@@ -4,8 +4,8 @@ info:
   version: 1.0.0
   description: API for loan products, eligibility assessment, and repayment estimates.
 servers:
-  - url: http://localhost:3000
-    description: Local development server
+  - url: /
+    description: Current API host
 tags:
   - name: Loans
     description: Loan products, eligibility, rates, and validation constraints

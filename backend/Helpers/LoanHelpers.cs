@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Text.Json;
+using LoanEligibility.Api.Models;
 
-namespace LoanEligibility.Api;
+namespace LoanEligibility.Api.Helpers;
 
 internal static class LoanHelpers
 {
