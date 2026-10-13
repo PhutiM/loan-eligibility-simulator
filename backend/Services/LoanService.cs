@@ -1,11 +1,47 @@
 using System.Text.Json;
-using static LoanEligibility.Api.LoanHelpers;
+using LoanEligibility.Api.Helpers;
+using LoanEligibility.Api.Models;
+using LoanEligibility.Api.Mock;
+using static LoanEligibility.Api.Helpers.LoanHelpers;
 
-namespace LoanEligibility.Api;
+namespace LoanEligibility.Api.Services;
 
-internal static class LoanService
+internal sealed class LoanService : ILoanService
 {
-    public static EligibilityAssessment ValidateEligibilityRequest(JsonElement body)
+    public IReadOnlyList<LoanProduct> GetProducts() => LoanData.Products;
+
+    public object GetValidationRules() => LoanData.ValidationRules;
+
+    public ServiceResult<EligibilityResponse> CheckEligibility(JsonElement body)
+    {
+        var assessment = ValidateEligibilityRequest(body);
+        return assessment.Errors.Count > 0
+            ? new ServiceResult<EligibilityResponse>(null, assessment.Errors)
+            : new ServiceResult<EligibilityResponse>(CalculateEligibility(assessment), []);
+    }
+
+    public ServiceResult<RateCalculationResponse> CalculateRate(JsonElement body)
+    {
+        var rateRequest = ValidateRateRequest(body);
+        if (rateRequest.Errors.Count > 0)
+            return new ServiceResult<RateCalculationResponse>(null, rateRequest.Errors);
+
+        var interestRate = GetRate(rateRequest.CreditScore, rateRequest.Product!);
+        var repayment = CalculateRepayment(
+            rateRequest.LoanAmount,
+            rateRequest.LoanTerm,
+            interestRate);
+        return new ServiceResult<RateCalculationResponse>(
+            new RateCalculationResponse(
+                interestRate,
+                repayment.MonthlyPayment,
+                repayment.TotalInterest,
+                repayment.TotalRepayment,
+                repayment.PaymentSchedule),
+            []);
+    }
+
+    private static EligibilityAssessment ValidateEligibilityRequest(JsonElement body)
     {
         var errors = new List<FieldError>();
         var personalInfo = GetObject(body, "personalInfo");
@@ -80,7 +116,7 @@ internal static class LoanService
             product);
     }
 
-    public static RateRequestAssessment ValidateRateRequest(JsonElement body)
+    private static RateRequestAssessment ValidateRateRequest(JsonElement body)
     {
         var errors = new List<FieldError>();
         if (!IsObject(body))
@@ -117,7 +153,7 @@ internal static class LoanService
             errors, loanAmount, loanTerm, GetNumber(creditScoreElement), product);
     }
 
-    public static double GetRate(double? creditScore, LoanProduct product)
+    private static double GetRate(double? creditScore, LoanProduct product)
     {
         var score = creditScore ?? 300;
         var rateOffset = score >= 750 ? 0
@@ -129,7 +165,7 @@ internal static class LoanService
         return Math.Min(product.InterestRateRange.Min + rateOffset, product.InterestRateRange.Max);
     }
 
-    public static RepaymentCalculation CalculateRepayment(double loanAmount, double loanTerm, double interestRate)
+    private static RepaymentCalculation CalculateRepayment(double loanAmount, double loanTerm, double interestRate)
     {
         var monthlyRate = interestRate / 100 / 12;
         var monthlyPayment = monthlyRate == 0
@@ -158,7 +194,7 @@ internal static class LoanService
             paymentSchedule);
     }
 
-    public static EligibilityResponse CalculateEligibility(EligibilityAssessment application)
+    private static EligibilityResponse CalculateEligibility(EligibilityAssessment application)
     {
         var product = application.Product ?? LoanData.Products[0];
         var creditScore = application.CreditScore ?? 300;
@@ -206,78 +242,3 @@ internal static class LoanService
     }
 
 }
-
-internal sealed record LoanProduct(
-    string Id,
-    string Name,
-    string Description,
-    double MinAmount,
-    double MaxAmount,
-    int MinTerm,
-    int MaxTerm,
-    InterestRateRange InterestRateRange,
-    string[] Purposes);
-
-internal sealed record InterestRateRange(double Min, double Max);
-internal sealed record ValidationRule(
-    double? Min,
-    double? Max,
-    bool? Integer,
-    bool Required,
-    string[]? Options,
-    string ErrorMessage);
-internal sealed record FieldError(string Field, string Message);
-internal sealed record ValidationErrorResponse(string Error, IReadOnlyList<FieldError> Details);
-internal sealed record EligibilityAssessment(
-    List<FieldError> Errors,
-    string EmploymentStatus,
-    double MonthlyIncome,
-    double MonthlyExpenses,
-    double ExistingDebt,
-    double? CreditScore,
-    double RequestedAmount,
-    double LoanTerm,
-    LoanProduct? Product);
-internal sealed record RateRequestAssessment(
-    List<FieldError> Errors,
-    double LoanAmount,
-    double LoanTerm,
-    double CreditScore,
-    LoanProduct? Product);
-internal sealed record RepaymentCalculation(
-    double MonthlyPayment,
-    double TotalInterest,
-    double TotalRepayment,
-    IReadOnlyList<PaymentInstallment> PaymentSchedule);
-internal sealed record PaymentInstallment(
-    int Month,
-    double Payment,
-    double Principal,
-    double Interest,
-    double Balance);
-internal sealed record RateCalculationResponse(
-    double InterestRate,
-    double MonthlyPayment,
-    double TotalInterest,
-    double TotalRepayment,
-    IReadOnlyList<PaymentInstallment> PaymentSchedule);
-internal sealed record EligibilityResponse(
-    EligibilityResult EligibilityResult,
-    RecommendedLoan RecommendedLoan,
-    AffordabilityAnalysis AffordabilityAnalysis);
-internal sealed record EligibilityResult(
-    bool IsEligible,
-    int ApprovalLikelihood,
-    string RiskCategory,
-    string DecisionReason);
-internal sealed record RecommendedLoan(
-    double MaxAmount,
-    double RecommendedAmount,
-    double InterestRate,
-    double MonthlyPayment,
-    double TotalRepayment);
-internal sealed record AffordabilityAnalysis(
-    double DisposableIncome,
-    double DebtToIncomeRatio,
-    double LoanToIncomeRatio,
-    string AffordabilityScore);

@@ -36,6 +36,8 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
         var document = await openApiResponse.Content.ReadAsStringAsync();
         Assert.Equal(HttpStatusCode.OK, openApiResponse.StatusCode);
         Assert.Contains("yaml", openApiResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("url: /", document);
+        Assert.DoesNotContain("localhost:3000", document);
         Assert.Contains("/api/loans/eligibility:", document);
         Assert.Contains("/api/loans/calculate-rate:", document);
 
@@ -129,6 +131,9 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
             new StringContent("{", System.Text.Encoding.UTF8, "application/json"));
         var malformed = await malformedResponse.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(HttpStatusCode.BadRequest, malformedResponse.StatusCode);
-        Assert.Equal("Invalid JSON request body", malformed.GetProperty("error").GetString());
+        Assert.True(
+            malformed.TryGetProperty("error", out var malformedJsonError),
+            malformed.ToString());
+        Assert.Equal("Invalid JSON request body", malformedJsonError.GetString());
     }
 }

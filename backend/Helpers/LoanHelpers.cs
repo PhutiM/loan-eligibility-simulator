@@ -1,18 +1,12 @@
 using System.Globalization;
 using System.Text.Json;
+using LoanEligibility.Api.Models;
 
-namespace LoanEligibility.Api;
+namespace LoanEligibility.Api.Helpers;
 
 internal static class LoanHelpers
 {
     private const double NumberEpsilon = 2.2204460492503131e-16;
-
-    internal static async Task<JsonDocument> ReadJsonBodyAsync(HttpRequest request)
-    {
-        using var reader = new StreamReader(request.Body);
-        var body = await reader.ReadToEndAsync(request.HttpContext.RequestAborted);
-        return JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
-    }
 
     internal static void ValidateNumber(
         JsonElement value,

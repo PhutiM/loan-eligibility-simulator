@@ -1,4 +1,6 @@
-namespace LoanEligibility.Api;
+using LoanEligibility.Api.Models;
+
+namespace LoanEligibility.Api.Mock;
 
 internal static class LoanData
 {
