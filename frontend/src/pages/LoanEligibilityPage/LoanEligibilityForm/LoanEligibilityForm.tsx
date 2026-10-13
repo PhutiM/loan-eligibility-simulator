@@ -3,6 +3,12 @@ import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import FormHelperText from '@mui/material/FormHelperText'
+import FormLabel from '@mui/material/FormLabel'
+import Radio from '@mui/material/Radio'
+import RadioGroup from '@mui/material/RadioGroup'
 import SvgIcon from '@mui/material/SvgIcon'
 import Typography from '@mui/material/Typography'
 import Button from '../../../components/Button/Button'
@@ -99,6 +105,7 @@ function LoanEligibilityForm({
     register,
     control,
     handleSubmit,
+    clearErrors,
     setValue,
     watch,
     formState: { errors },
@@ -324,7 +331,6 @@ function LoanEligibilityForm({
 
       <FormSection title="Loan Details" icon="loan">
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
-          
           <Controller
             name="loanDetails.loanType"
             control={control}
@@ -338,25 +344,89 @@ function LoanEligibilityForm({
                 validationRules.loanDetails.loanType.errorMessage,
             }}
             render={({ field }) => (
-              <Dropdown
-                className="col-span-3 max-sm:col-span-1"
-                label="Loan Product"
-                options={products.map(({ id, name }) => ({ value: id, label: name }))}
-                placeholder={isLoadingProducts ? 'Loading loan products…' : 'Select a loan product'}
-                disabled={isLoadingProducts || products.length === 0}
-                value={field.value}
-                onChange={(event) => {
-                  field.onChange(event.target.value)
-                  setValue('loanDetails.loanPurpose', '', { shouldValidate: true })
-                  setValue('loanDetails.requestedAmount', undefined)
-                  setValue('loanDetails.loanTerm', undefined)
-                }}
-                onBlur={field.onBlur}
-                name={field.name}
-                inputRef={field.ref}
+              <FormControl
+                component="fieldset"
+                fullWidth
                 error={Boolean(errors.loanDetails?.loanType)}
-                helperText={errors.loanDetails?.loanType?.message}
-              />
+                className="col-span-3 max-sm:col-span-1"
+              >
+                <FormLabel
+                  id="loan-product-label"
+                  component="legend"
+                  className="mb-1 block text-xs text-[var(--brand-muted)]"
+                  sx={{ color: 'var(--brand-muted)', fontSize: 12, lineHeight: 1.5 }}
+                >
+                  Loan Product
+                </FormLabel>
+                <RadioGroup
+                  aria-labelledby="loan-product-label"
+                  aria-describedby={errors.loanDetails?.loanType ? 'loan-product-error' : undefined}
+                  aria-invalid={Boolean(errors.loanDetails?.loanType)}
+                  aria-required={validationRules.loanDetails.loanType.required}
+                  name={field.name}
+                  value={field.value}
+                  onChange={(_, value) => {
+                    field.onChange(value)
+                    setValue('loanDetails.loanPurpose', '')
+                    setValue('loanDetails.requestedAmount', undefined)
+                    setValue('loanDetails.loanTerm', undefined)
+                    clearErrors([
+                      'loanDetails.loanPurpose',
+                      'loanDetails.requestedAmount',
+                      'loanDetails.loanTerm',
+                    ])
+                  }}
+                  onBlur={field.onBlur}
+                  row
+                  className="gap-2"
+                >
+                  {products.map(({ id, name }, index) => {
+                    const selected = field.value === id
+                    return (
+                      <FormControlLabel
+                        key={id}
+                        value={id}
+                        control={
+                          <Radio
+                            disabled={isLoadingProducts}
+                            ref={index === 0 ? field.ref : undefined}
+                            sx={{ '&.Mui-checked': { color: 'var(--brand-navy)' } }}
+                          />
+                        }
+                        disabled={isLoadingProducts}
+                        label={name}
+                        sx={{
+                          m: 0,
+                          px: 1.5,
+                          py: 0.5,
+                          border: '1px solid',
+                          borderColor: selected ? 'var(--brand-navy)' : 'var(--brand-border)',
+                          borderRadius: '8px',
+                          bgcolor: selected ? 'var(--brand-tint)' : 'white',
+                          color: 'var(--brand-navy)',
+                          '&:has(.Mui-focusVisible)': {
+                            outline: '2px solid #0877d1',
+                            outlineOffset: '2px',
+                          },
+                        }}
+                      />
+                    )
+                  })}
+                </RadioGroup>
+                {(errors.loanDetails?.loanType || isLoadingProducts || products.length === 0) && (
+                  <FormHelperText
+                    id={errors.loanDetails?.loanType ? 'loan-product-error' : undefined}
+                    role={isLoadingProducts ? 'status' : undefined}
+                  >
+                    {errors.loanDetails?.loanType?.message ??
+                      (isLoadingProducts
+                        ? 'Loading loan products…'
+                        : products.length === 0
+                          ? 'No loan products are currently available.'
+                          : '')}
+                  </FormHelperText>
+                )}
+              </FormControl>
             )}
           />
           <Controller
