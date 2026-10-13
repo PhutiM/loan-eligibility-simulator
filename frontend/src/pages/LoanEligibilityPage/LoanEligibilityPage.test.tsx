@@ -61,16 +61,18 @@ const rateResponse = {
   paymentSchedule: [{ month: 1, payment: 7096.1, principal: 5533.6, interest: 1562.5, balance: 144466.4 }],
 }
 
-function mockFetch(eligibilityResponse?: unknown) {
+function mockFetch(eligibilityResponse?: unknown | (() => unknown)) {
   const fetchMock = vi.fn((input: RequestInfo | URL) => {
     const url = String(input)
     const response = url.endsWith('/api/loans/products')
       ? productsResponse
       : url.endsWith('/api/loans/validation-rules')
         ? validationRulesResponse
-      : url.endsWith('/api/loans/calculate-rate')
-        ? rateResponse
-        : eligibilityResponse
+        : url.endsWith('/api/loans/calculate-rate')
+          ? rateResponse
+          : typeof eligibilityResponse === 'function'
+            ? eligibilityResponse()
+            : eligibilityResponse
     return Promise.resolve({
       ok: true,
       json: async () => response,
@@ -198,7 +200,16 @@ describe('LoanEligibilityPage', () => {
       await screen.findByRole('heading', { name: 'You are likely eligible!' }),
     ).toBeInTheDocument()
     expect(screen.getByText('85%')).toBeInTheDocument()
-    expect(await screen.findAllByRole('heading', { name: 'Loan Details' })).toHaveLength(2)
+    expect(
+      await screen.findByRole('heading', { name: 'Loan recommendation details' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Recommended Amount')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Eligibility Summary' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Affordability Analysis' })).toBeInTheDocument()
+    expect(screen.getByText('Risk Category')).toBeInTheDocument()
+    expect(screen.getByText('Decision Reason')).toBeInTheDocument()
+    expect(screen.getByText('Debt to Income Ratio')).toBeInTheDocument()
+    expect(screen.getByText('Affordability Score')).toBeInTheDocument()
     expect(screen.getByText(/7,096\.10/)).toBeInTheDocument()
     expect(screen.getByText('12.5% p.a.')).toBeInTheDocument()
     expect(screen.getAllByText('24 months')).toHaveLength(2)
@@ -210,6 +221,46 @@ describe('LoanEligibilityPage', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
     expect(screen.getByRole('spinbutton', { name: 'Age' })).toHaveValue(null)
+  })
+
+  it('clears the previous likelihood when application inputs change', async () => {
+    let eligibilityRequestCount = 0
+    mockFetch(() => ({
+      eligibilityResult: {
+        isEligible: true,
+        approvalLikelihood: eligibilityRequestCount++ === 0 ? 85 : 42,
+        riskCategory: 'low',
+        decisionReason: 'Manageable debt',
+      },
+      recommendedLoan: {
+        maxAmount: 180000,
+        recommendedAmount: 150000,
+        interestRate: 12.5,
+        monthlyPayment: 7096.1,
+        totalRepayment: 170306.4,
+      },
+      affordabilityAnalysis: {
+        disposableIncome: 10000,
+        debtToIncomeRatio: 20,
+        loanToIncomeRatio: 60,
+        affordabilityScore: 'good',
+      },
+    }))
+    render(<LoanEligibilityPage />)
+
+    await enterValidApplication()
+    fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
+    expect(await screen.findByText('85%')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Credit Score (optional)' }), {
+      target: { value: '600' },
+    })
+
+    expect(screen.queryByText('85%')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
+    expect(await screen.findByText('42%')).toBeInTheDocument()
   })
 
   it('scrolls results into view on mobile after a successful eligibility check', async () => {
@@ -295,6 +346,8 @@ describe('LoanEligibilityPage', () => {
         },
         affordabilityAnalysis: {
           disposableIncome: 10000,
+          debtToIncomeRatio: 20,
+          loanToIncomeRatio: 60,
           affordabilityScore: 'good',
         },
     }
@@ -369,6 +422,8 @@ describe('LoanEligibilityPage', () => {
           },
           affordabilityAnalysis: {
             disposableIncome: 0,
+            debtToIncomeRatio: 80,
+            loanToIncomeRatio: 0,
             affordabilityScore: 'poor',
           },
               }),

@@ -6,6 +6,8 @@ import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
 import Button from '../../components/Button/Button'
 import EligibilityResult from '../../components/EligibilityResult/EligibilityResult'
+import EligibilitySummary from '../../components/EligibilitySummary/EligibilitySummary'
+import AffordabilityAnalysis from '../../components/AffordabilityAnalysis/AffordabilityAnalysis'
 import RecommendedLoanCard from './RecommendedLoanCard'
 import {
   calculateLoanRate,
@@ -136,6 +138,16 @@ function LoanEligibilityPage() {
     setFormKey((currentKey) => currentKey + 1)
   }
 
+  const handleFormChange = () => {
+    setApiError('')
+    if (!result) return
+
+    setResult(undefined)
+    setRateCalculation(undefined)
+    setCalculatedLoanTerm(undefined)
+    setRateCalculationError('')
+  }
+
   return (
     <Box className="loan-dashboard">
       <Typography component="h1" className="sr-only">
@@ -192,6 +204,11 @@ function LoanEligibilityPage() {
                   calculation={rateCalculation}
                 />
               )}
+              <EligibilitySummary
+                riskCategory={result.eligibilityResult.riskCategory}
+                decisionReason={result.eligibilityResult.decisionReason}
+              />
+              <AffordabilityAnalysis analysis={result.affordabilityAnalysis} />
               {rateCalculationError && <Alert severity="error">{rateCalculationError}</Alert>}
               <Box>
                 <Button
@@ -226,6 +243,7 @@ function LoanEligibilityPage() {
           <LoanEligibilityForm
             key={formKey}
             onSubmit={checkEligibility}
+            onValuesChange={handleFormChange}
             products={products}
             validationRules={validationRules}
             isLoadingProducts={isLoadingLoanPurposes}

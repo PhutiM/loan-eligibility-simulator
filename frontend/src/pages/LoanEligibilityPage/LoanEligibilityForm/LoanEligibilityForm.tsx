@@ -38,6 +38,7 @@ export type LoanEligibilityFormValues = {
 
 type LoanEligibilityFormProps = {
   onSubmit: (values: LoanEligibilityFormValues) => void | Promise<void>
+  onValuesChange?: () => void
   products: LoanProduct[]
   validationRules: ValidationRules
   isLoadingProducts?: boolean
@@ -96,6 +97,7 @@ function FormSection({
 
 function LoanEligibilityForm({
   onSubmit,
+  onValuesChange,
   products,
   validationRules,
   isLoadingProducts = false,
@@ -179,6 +181,7 @@ function LoanEligibilityForm({
       noValidate
       className="grid gap-3"
       onSubmit={handleSubmit(submitForm)}
+      onChange={onValuesChange}
     >
       <FormSection title="Personal Information" icon="person">
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
