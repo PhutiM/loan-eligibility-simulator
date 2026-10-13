@@ -1,5 +1,5 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using LoanEligibility.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +9,18 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        var defaultInvalidModelStateResponse = options.InvalidModelStateResponseFactory;
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var hasInvalidJson = context.ModelState.TryGetValue("$", out var bodyErrors)
+                && bodyErrors.Errors.Count > 0;
+            return hasInvalidJson
+                ? new BadRequestObjectResult(new { error = "Invalid JSON request body" })
+                : defaultInvalidModelStateResponse!(context);
+        };
     });
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddCors();
@@ -21,19 +33,6 @@ app.UseCors(policy =>
     if (!string.IsNullOrWhiteSpace(frontendOrigin))
     {
         policy.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod();
-    }
-});
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (JsonException)
-    {
-        context.Response.Clear();
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        await context.Response.WriteAsJsonAsync(new { error = "Invalid JSON request body" });
     }
 });
 app.UseSwaggerUI(options =>

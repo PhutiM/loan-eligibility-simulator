@@ -1,7 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using LoanEligibility.Api.Models;
 using LoanEligibility.Api.Services;
-using static LoanEligibility.Api.Helpers.LoanHelpers;
 
 namespace LoanEligibility.Api.Controllers;
 
@@ -33,10 +33,9 @@ public sealed class LoanController(ILoanService loanService) : ControllerBase
         Ok(loanService.GetValidationRules());
 
     [HttpPost("loans/eligibility")]
-    public async Task<IActionResult> CheckEligibility()
+    public IActionResult CheckEligibility([FromBody] JsonElement body)
     {
-        using var body = await ReadJsonBodyAsync(Request);
-        var result = loanService.CheckEligibility(body.RootElement);
+        var result = loanService.CheckEligibility(body);
         if (result.Errors.Count > 0)
         {
             return BadRequest(new ValidationErrorResponse("Validation failed", result.Errors));
@@ -46,10 +45,9 @@ public sealed class LoanController(ILoanService loanService) : ControllerBase
     }
 
     [HttpPost("loans/calculate-rate")]
-    public async Task<IActionResult> CalculateRate()
+    public IActionResult CalculateRate([FromBody] JsonElement body)
     {
-        using var body = await ReadJsonBodyAsync(Request);
-        var result = loanService.CalculateRate(body.RootElement);
+        var result = loanService.CalculateRate(body);
         if (result.Errors.Count > 0)
         {
             return BadRequest(new ValidationErrorResponse("Validation failed", result.Errors));

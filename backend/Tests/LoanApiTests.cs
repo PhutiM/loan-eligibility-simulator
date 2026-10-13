@@ -131,6 +131,9 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
             new StringContent("{", System.Text.Encoding.UTF8, "application/json"));
         var malformed = await malformedResponse.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(HttpStatusCode.BadRequest, malformedResponse.StatusCode);
-        Assert.Equal("Invalid JSON request body", malformed.GetProperty("error").GetString());
+        Assert.True(
+            malformed.TryGetProperty("error", out var malformedJsonError),
+            malformed.ToString());
+        Assert.Equal("Invalid JSON request body", malformedJsonError.GetString());
     }
 }
