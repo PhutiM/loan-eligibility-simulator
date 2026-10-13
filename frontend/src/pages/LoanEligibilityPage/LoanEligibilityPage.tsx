@@ -130,98 +130,103 @@ function LoanEligibilityPage() {
       <Typography component="h1" className="sr-only">
         Loan Eligibility Simulator
       </Typography>
-      <Card
-        elevation={0}
-        className="loan-information-card rounded-xl border border-[#c8e1fa] bg-[#eff7ff]"
-      >
-        <CardContent className="flex gap-2 p-3">
-          <Box
-            aria-hidden="true"
-            className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0877d1] text-xs font-bold text-white"
-          >
-            i
-          </Box>
-          <Box>
-            <Typography
-              component="h2"
-              variant="subtitle1"
-              className="text-[#0877d1]"
-              sx={{ fontSize: 13, fontWeight: 750 }}
+      <Box className="loan-side-panel">
+        <Card
+          elevation={0}
+          className="loan-information-card rounded-xl border border-[#c8e1fa] bg-[#eff7ff]"
+        >
+          <CardContent className="flex gap-3 p-5 max-md:gap-2 max-md:p-3">
+            <Box
+              aria-hidden="true"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0877d1] text-sm font-bold text-white max-md:h-6 max-md:w-6 max-md:text-xs"
             >
-              Important Information
-            </Typography>
-            <Typography
-              component="p"
-              variant="body2"
-              className="mt-1 text-[var(--brand-muted)]"
-              sx={{ fontSize: 11, lineHeight: 1.5 }}
-            >
-              This is a simplified estimate, not a loan offer or credit
-              decision. Actual eligibility depends on credit history, verified
-              income, lender affordability rules, fees and other criteria.
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Box className="loan-form-panel grid gap-3">
-        {validationRules ? (
-          <LoanEligibilityForm
-            key={formKey}
-            onSubmit={checkEligibility}
-            products={products}
-            validationRules={validationRules}
-            isLoadingProducts={isLoadingLoanPurposes}
-            isSubmitting={isSubmitting}
-          />
-        ) : (
-          <Alert severity={validationRulesError ? 'error' : 'info'}>
-            {validationRulesError || (isLoadingValidationRules ? 'Loading validation rules…' : '')}
-          </Alert>
-        )}
-        {apiError && <Alert severity="error">{apiError}</Alert>}
-        {loanProductsError && <Alert severity="error">{loanProductsError}</Alert>}
-      </Box>
-
-      <Box className="loan-results-panel flex flex-col gap-3">
-        {result ? (
-          <Box className="flex flex-1 flex-col gap-3">
-            <EligibilityResult
-              isEligible={result.eligibilityResult.isEligible}
-              approvalLikelihood={result.eligibilityResult.approvalLikelihood}
-            />
-            {rateCalculation && (
-              <RecommendedLoanCard
-                className="flex-1"
-                recommendedAmount={result.recommendedLoan.recommendedAmount}
-                maxAmount={result.recommendedLoan.maxAmount}
-                loanTerm={calculatedLoanTerm ?? 0}
-                calculation={rateCalculation}
-              />
-            )}
-            {rateCalculationError && <Alert severity="error">{rateCalculationError}</Alert>}
-            <Box>
-              <Button
-                type="button"
-                variant="secondary"
-                fullWidth
-                onClick={resetCalculator}
-                style={{ textTransform: 'none' }}
-              >
-                Reset Calculator
-              </Button>
+              i
             </Box>
-          </Box>
-        ) : (
-          <Card
-            elevation={0}
-            className="min-h-80 flex-1 overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white/95"
-          >
-            <CardContent className="flex h-full flex-col p-0">
-              <Summary description="Complete the form to see your personalised financial summary, including your estimated loan amount and monthly repayments." />
-            </CardContent>
-          </Card>
-        )}
+            <Box>
+              <Typography
+                component="h2"
+                variant="subtitle1"
+                className="text-[#0877d1]"
+                sx={{ fontSize: { xs: 13, md: 14 }, fontWeight: 750 }}
+              >
+                Important Information
+              </Typography>
+              <Typography
+                component="p"
+                variant="body2"
+                className="mt-2 text-[var(--brand-muted)] max-md:mt-1"
+                sx={{ fontSize: { xs: 11, md: 12 }, lineHeight: { xs: 1.5, md: 1.65 } }}
+              >
+                This is a simplified estimate, not a loan offer or credit
+                decision. Actual eligibility depends on credit history, verified
+                income, lender affordability rules, fees and other criteria.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Box className="loan-form-panel grid gap-3">
+          {validationRules ? (
+            <LoanEligibilityForm
+              key={formKey}
+              onSubmit={checkEligibility}
+              products={products}
+              validationRules={validationRules}
+              isLoadingProducts={isLoadingLoanPurposes}
+              isSubmitting={isSubmitting}
+            />
+          ) : (
+            <Alert severity={validationRulesError ? 'error' : 'info'}>
+              {validationRulesError || (isLoadingValidationRules ? 'Loading validation rules…' : '')}
+            </Alert>
+          )}
+          {apiError && <Alert severity="error">{apiError}</Alert>}
+          {loanProductsError && <Alert severity="error">{loanProductsError}</Alert>}
+        </Box>
+
+        <Box className="loan-results-panel flex flex-col gap-3">
+          {result ? (
+            <Box className="flex flex-1 flex-col gap-3">
+              <EligibilityResult
+                isEligible={result.eligibilityResult.isEligible}
+                approvalLikelihood={result.eligibilityResult.approvalLikelihood}
+              />
+              {rateCalculation && (
+                <RecommendedLoanCard
+                  className="flex-1"
+                  recommendedAmount={result.recommendedLoan.recommendedAmount}
+                  maxAmount={result.recommendedLoan.maxAmount}
+                  loanTerm={calculatedLoanTerm ?? 0}
+                  calculation={rateCalculation}
+                />
+              )}
+              {rateCalculationError && <Alert severity="error">{rateCalculationError}</Alert>}
+              <Box>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  onClick={resetCalculator}
+                  style={{ textTransform: 'none' }}
+                >
+                  Reset Calculator
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Card
+              elevation={0}
+              className="h-full flex-1 overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white/95"
+            >
+              <CardContent className="flex h-full flex-col p-0">
+                <Summary
+                  className="loan-summary"
+                  description="Complete the form to see your personalised financial summary, including your estimated loan amount and monthly repayments."
+                />
+              </CardContent>
+            </Card>
+          )}
+        </Box>
       </Box>
     </Box>
   )
