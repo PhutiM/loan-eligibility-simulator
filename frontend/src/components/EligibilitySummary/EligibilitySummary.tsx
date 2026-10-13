@@ -10,6 +10,13 @@ type EligibilitySummaryProps = {
 }
 
 function EligibilitySummary({ riskCategory, decisionReason }: EligibilitySummaryProps) {
+  const riskColors: Record<string, string> = {
+    low: 'bg-[#d1fae5] text-[#047857]',
+    medium: 'bg-[#fef3c7] text-[#b45309]',
+    high: 'bg-[#fee2e2] text-[#b91c1c]',
+  }
+  const riskColor = riskColors[riskCategory.toLowerCase()] ?? 'bg-[#e2e8f0] text-[#475569]'
+
   return (
     <Card
       component="section"
@@ -40,7 +47,7 @@ function EligibilitySummary({ riskCategory, decisionReason }: EligibilitySummary
           </Typography>
           <Typography
             component="p"
-            className="w-fit rounded-full bg-[#d1fae5] px-3 py-1 capitalize text-[#047857]"
+            className={`w-fit rounded-full px-3 py-1 capitalize ${riskColor}`}
             sx={{ fontSize: 12, fontWeight: 700 }}
           >
             {riskCategory}
