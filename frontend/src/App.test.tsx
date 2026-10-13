@@ -70,7 +70,8 @@ describe('App', () => {
     expect(
       informationCard.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
+    expect(screen.getByText('Step 1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
     expect(screen.queryByText(/Secure & Confidential/)).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/api/loans/products')

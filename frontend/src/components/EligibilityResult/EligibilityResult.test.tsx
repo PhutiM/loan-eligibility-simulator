@@ -5,35 +5,35 @@ import EligibilityResult from './EligibilityResult'
 afterEach(cleanup)
 
 describe('EligibilityResult', () => {
-  it('shows the likely-eligible state and approval likelihood', () => {
+  it('shows an eligibility estimate and clearly labels its simulator score', () => {
     render(<EligibilityResult isEligible approvalLikelihood={85} />)
 
-    expect(screen.getByRole('heading', { name: 'You are likely eligible!' })).toBeInTheDocument()
-    expect(screen.getByText('85%')).toBeInTheDocument()
-    expect(screen.getByText('Approval Likelihood')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Positive simulator result' })).toBeInTheDocument()
+    expect(screen.getByText('85/100')).toBeInTheDocument()
+    expect(screen.getByText('Simulator score')).toBeInTheDocument()
     expect(
-      screen.getByText(/you have a high chance of approval/),
+      screen.getByText(/not a probability of approval or a lender decision/),
     ).toBeInTheDocument()
   })
 
-  it('shows a low-likelihood outcome when the applicant is not eligible', () => {
+  it('shows a screening result when the applicant does not meet the current criteria', () => {
     render(<EligibilityResult isEligible={false} approvalLikelihood={15} />)
 
     expect(
-      screen.getByRole('heading', { name: 'You are unlikely to be eligible' }),
+      screen.getByRole('heading', { name: 'Further review recommended' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/your chance of approval is low/),
+      screen.getByText("Your details don't meet the simulator's current screening criteria."),
     ).toBeInTheDocument()
   })
 
-  it('clamps likelihood values to the displayed percentage range', () => {
+  it('clamps the simulator score to its displayed range', () => {
     render(<EligibilityResult isEligible approvalLikelihood={120} />)
 
-    expect(screen.getByText('100%')).toBeInTheDocument()
+    expect(screen.getByText('100/100')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveAttribute(
       'aria-label',
-      'You are likely eligible! Approval likelihood: 100%',
+      'Positive simulator result. Simulator score: 100 out of 100.',
     )
   })
 })

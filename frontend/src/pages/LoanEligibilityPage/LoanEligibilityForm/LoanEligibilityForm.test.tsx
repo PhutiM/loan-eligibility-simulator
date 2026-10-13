@@ -48,23 +48,49 @@ const validationRules: ValidationRules = {
   },
 }
 
-async function enterValidApplication() {
-  const values = [
+async function enterPersonalDetails() {
+  const personalValues = [
     ['Age', '35'],
     ['Employment Duration (months)', '24'],
-    ['Monthly Income (ZAR)', '25000'],
-    ['Monthly Expenses (ZAR)', '15000'],
-    ['Existing Debt (ZAR)', '5000'],
-    ['Credit Score (optional)', '650'],
   ] as const
-
-  for (const [label, value] of values) {
+  for (const [label, value] of personalValues) {
     fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
       target: { value },
     })
   }
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
   fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('spinbutton', { name: 'Monthly Income (ZAR)' })
+}
+
+async function enterFinancialDetails() {
+  const financialValues = [
+    ['Monthly Income (ZAR)', '25000'],
+    ['Monthly Expenses (ZAR)', '15000'],
+    ['Existing Debt (ZAR)', '5000'],
+  ] as const
+  for (const [label, value] of financialValues) {
+    fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
+      target: { value },
+    })
+  }
+  const disabledCreditScoreSlider = screen.getByRole('slider', { name: 'Credit score' })
+  expect(disabledCreditScoreSlider).toBeDisabled()
+  expect(disabledCreditScoreSlider).toHaveAttribute('aria-valuemin', '300')
+  expect(disabledCreditScoreSlider).toHaveAttribute('aria-valuemax', '850')
+  fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
+  const creditScoreSlider = screen.getByRole('slider', { name: 'Credit score' })
+  expect(creditScoreSlider).toBeEnabled()
+  fireEvent.keyDown(creditScoreSlider, { key: 'End' })
+  expect(creditScoreSlider).toHaveAttribute('aria-valuenow', '850')
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('radio', { name: 'Personal Loan' })
+}
+
+async function enterValidApplication() {
+  await enterPersonalDetails()
+  await enterFinancialDetails()
   fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
   const dropdownOptions = [
     ['Loan Term', '24 months'],
@@ -94,19 +120,18 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.getByRole('combobox', { name: 'Employment Status' })).toHaveTextContent(
       'Select an option',
     )
-    expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Personal Loan' })).not.toBeChecked()
+    expect(screen.getByRole('navigation', { name: 'Application progress' })).toBeInTheDocument()
+    expect(screen.getByText('Personal Details').closest('li')).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+    expect(screen.getByText('Tell us a little about yourself and your current employment.')).toBeInTheDocument()
+    await enterValidApplication()
     expect(screen.getByText('Flexible personal financing for various needs')).toBeInTheDocument()
     expect(screen.getByText('Financing for new and used vehicles')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Personal Loan/ }).closest('label')).toHaveStyle({
       width: '100%',
     })
-    expect(screen.getByRole('combobox', { name: 'Loan Term' })).toHaveTextContent('Select an option')
-    expect(screen.getByRole('combobox', { name: 'Loan Purpose' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
-    await enterValidApplication()
     fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
 
     await waitFor(() => {
@@ -120,7 +145,7 @@ describe('Loan Eligibility Page Form', () => {
           monthlyIncome: 25000,
           monthlyExpenses: 15000,
           existingDebt: 5000,
-          creditScore: 650,
+          creditScore: 850,
         },
         loanDetails: {
           loanType: 'personal_loan',
@@ -179,6 +204,8 @@ describe('Loan Eligibility Page Form', () => {
     const onSubmit = vi.fn()
     render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
 
+    await enterPersonalDetails()
+    await enterFinancialDetails()
     fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
 
     expect(await screen.findByText('Please select a loan product')).toBeInTheDocument()
@@ -198,6 +225,8 @@ describe('Loan Eligibility Page Form', () => {
       />,
     )
 
+    await enterPersonalDetails()
+    await enterFinancialDetails()
     fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
     expect(screen.queryByText('Please select a loan purpose')).not.toBeInTheDocument()
 
@@ -213,9 +242,11 @@ describe('Loan Eligibility Page Form', () => {
     render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
 
     await enterValidApplication()
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Credit Score (optional)' }), {
-      target: { value: '' },
-    })
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
+    expect(screen.getByRole('slider', { name: 'Credit score' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await screen.findByRole('radio', { name: 'Personal Loan' })
     fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
 
     await waitFor(() =>
@@ -230,6 +261,8 @@ describe('Loan Eligibility Page Form', () => {
   it('filters purpose and term options after selecting a product', async () => {
     render(<LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} />)
 
+    await enterPersonalDetails()
+    await enterFinancialDetails()
     fireEvent.click(screen.getByRole('radio', { name: 'Vehicle Finance' }))
 
     expect(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' })).toHaveAttribute(
@@ -286,7 +319,7 @@ describe('Loan Eligibility Page Form', () => {
     )
   })
 
-  it('announces loading and empty product states accessibly', () => {
+  it('announces loading and empty product states accessibly', async () => {
     const { rerender } = render(
       <LoanEligibilityForm
         onSubmit={vi.fn()}
@@ -296,8 +329,9 @@ describe('Loan Eligibility Page Form', () => {
       />,
     )
 
+    await enterPersonalDetails()
+    await enterFinancialDetails()
     expect(screen.getByRole('status')).toHaveTextContent('Loading loan products…')
-    expect(screen.getByRole('radio', { name: 'Personal Loan' })).toBeDisabled()
 
     rerender(
       <LoanEligibilityForm onSubmit={vi.fn()} products={[]} validationRules={validationRules} />,
@@ -306,16 +340,20 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
   })
 
-  it('renders the eligibility action without a reset action in the form', () => {
-    render(<LoanEligibilityForm onSubmit={vi.fn()} products={[]} validationRules={validationRules} />)
+  it('guides the applicant through the steps before showing the eligibility action', async () => {
+    render(<LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} />)
 
-    expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Check Eligibility' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reset Calculator' })).not.toBeInTheDocument()
+    await enterValidApplication()
+    expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
   })
 
-  it('disables the submit button while checking eligibility', () => {
-    render(<LoanEligibilityForm onSubmit={vi.fn()} products={[]} validationRules={validationRules} isSubmitting />)
+  it('disables the submit button while checking eligibility', async () => {
+    render(<LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} isSubmitting />)
 
+    await enterValidApplication()
     expect(screen.getByRole('button', { name: 'Checking Eligibility…' })).toBeDisabled()
   })
 })

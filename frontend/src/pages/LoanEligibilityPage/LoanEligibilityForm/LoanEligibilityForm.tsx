@@ -1,16 +1,26 @@
 import type { ReactNode } from 'react'
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
+import { useState } from 'react'
+import {
+  Controller,
+  useForm,
+  type FieldErrors,
+  type FieldPath,
+  type SubmitHandler,
+} from 'react-hook-form'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import Checkbox from '@mui/material/Checkbox'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import FormHelperText from '@mui/material/FormHelperText'
 import FormLabel from '@mui/material/FormLabel'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
+import Slider from '@mui/material/Slider'
 import SvgIcon from '@mui/material/SvgIcon'
 import Typography from '@mui/material/Typography'
+import ApplicationStepper from '../../../components/ApplicationStepper/ApplicationStepper'
 import Button from '../../../components/Button/Button'
 import Dropdown from '../../../components/Dropdown/Dropdown'
 import Textbox from '../../../components/Textbox/Textbox'
@@ -35,6 +45,28 @@ export type LoanEligibilityFormValues = {
     loanPurpose: string
   }
 }
+
+const stepFields: FieldPath<LoanEligibilityFormValues>[][] = [
+  [
+    'personalInfo.age',
+    'personalInfo.employmentStatus',
+    'personalInfo.employmentDuration',
+  ],
+  [
+    'financialInfo.monthlyIncome',
+    'financialInfo.monthlyExpenses',
+    'financialInfo.existingDebt',
+    'financialInfo.creditScore',
+  ],
+  [
+    'loanDetails.loanType',
+    'loanDetails.loanPurpose',
+    'loanDetails.requestedAmount',
+    'loanDetails.loanTerm',
+  ],
+]
+
+const stepTitles = ['Personal Details', 'Financial Information', 'Loan Details']
 
 type LoanEligibilityFormProps = {
   onSubmit: (values: LoanEligibilityFormValues) => void | Promise<void>
@@ -107,6 +139,7 @@ function LoanEligibilityForm({
     register,
     control,
     handleSubmit,
+    trigger,
     clearErrors,
     setValue,
     watch,
@@ -133,8 +166,12 @@ function LoanEligibilityForm({
     },
   })
 
+  const [activeStep, setActiveStep] = useState(0)
+  const [isCreditScoreKnown, setIsCreditScoreKnown] = useState(false)
   const selectedLoanType = watch('loanDetails.loanType')
   const selectedProduct = products.find(({ id }) => id === selectedLoanType)
+  const creditScoreMin = validationRules.financialInfo.creditScore.min ?? 300
+  const creditScoreMax = validationRules.financialInfo.creditScore.max ?? 850
   const amountErrorMessage = selectedProduct
     ? `Loan amount must be between R${selectedProduct.minAmount.toLocaleString()} and R${selectedProduct.maxAmount.toLocaleString()}`
     : validationRules.loanDetails.requestedAmount.errorMessage
@@ -173,17 +210,47 @@ function LoanEligibilityForm({
     : []
 
   const submitForm: SubmitHandler<LoanEligibilityFormValues> = (values) => onSubmit(values)
+  const handleInvalidSubmit = (invalidFields: FieldErrors<LoanEligibilityFormValues>) => {
+    if (invalidFields.personalInfo) {
+      setActiveStep(0)
+    } else if (invalidFields.financialInfo) {
+      setActiveStep(1)
+    } else if (invalidFields.loanDetails) {
+      setActiveStep(2)
+    }
+  }
+  const goToNextStep = async () => {
+    if (await trigger(stepFields[activeStep])) {
+      setActiveStep((currentStep) => Math.min(currentStep + 1, stepTitles.length - 1))
+    }
+  }
 
   return (
     <Box
       component="form"
       aria-label="Loan eligibility application"
       noValidate
-      className="grid gap-3"
-      onSubmit={handleSubmit(submitForm)}
+      className="grid content-start gap-3"
+      onSubmit={handleSubmit(submitForm, handleInvalidSubmit)}
       onChange={onValuesChange}
     >
-      <FormSection title="Personal Information" icon="person">
+      <Box className="rounded-xl border border-[var(--brand-border)] bg-white px-5 py-5 max-sm:px-4">
+        <ApplicationStepper steps={stepTitles} activeStep={activeStep} />
+        <Typography
+          component="p"
+          className="mt-5 text-[var(--brand-muted)]"
+          sx={{ fontSize: 12, lineHeight: 1.5 }}
+        >
+          {activeStep === 0 &&
+            'Tell us a little about yourself and your current employment. You can go back to edit any answers.'}
+          {activeStep === 1 &&
+            'Enter monthly amounts in rand. Your credit score is optional.'}
+          {activeStep === 2 &&
+            'Choose a loan product to see its available amount and repayment term ranges.'}
+        </Typography>
+      </Box>
+
+      {activeStep === 0 && <FormSection title="Personal Information" icon="person">
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
           <Textbox
             label="Age"
@@ -250,9 +317,9 @@ function LoanEligibilityForm({
             })}
           />
         </Box>
-      </FormSection>
+      </FormSection>}
 
-      <FormSection title="Financial Information" icon="finance">
+      {activeStep === 1 && <FormSection title="Financial Information" icon="finance">
         <Box className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
           <Textbox
             label="Monthly Income (ZAR)"
@@ -308,16 +375,10 @@ function LoanEligibilityForm({
                 validationRules.financialInfo.existingDebt.errorMessage,
             })}
           />
-          <Textbox
-            label="Credit Score (optional)"
-            type="number"
-            placeholder="Enter Credit Score"
-            min={validationRules.financialInfo.creditScore.min}
-            max={validationRules.financialInfo.creditScore.max}
-            error={Boolean(errors.financialInfo?.creditScore)}
-            helperText={errors.financialInfo?.creditScore?.message}
-            {...register('financialInfo.creditScore', {
-              setValueAs: (value: string) => (value === '' ? undefined : Number(value)),
+          <Controller
+            name="financialInfo.creditScore"
+            control={control}
+            rules={{
               validate: (value) =>
                 value === undefined ||
                 ((validationRules.financialInfo.creditScore.min === undefined ||
@@ -327,12 +388,108 @@ function LoanEligibilityForm({
                   (!validationRules.financialInfo.creditScore.integer ||
                     Number.isInteger(value))) ||
                 validationRules.financialInfo.creditScore.errorMessage,
-            })}
+            }}
+            render={({ field }) => (
+              <FormControl
+                error={Boolean(errors.financialInfo?.creditScore)}
+                className="col-span-2 max-sm:col-span-1"
+              >
+                <Box className="flex items-center justify-between gap-2">
+                  <FormLabel
+                    id="credit-score-label"
+                    component="span"
+                    sx={{ color: 'var(--brand-muted)', fontSize: 12 }}
+                  >
+                    Credit score (optional)
+                  </FormLabel>
+                  <Typography
+                    component="span"
+                    className="text-[var(--brand-navy)]"
+                    sx={{ fontSize: 13, fontWeight: 700 }}
+                  >
+                    {field.value ?? 'Not provided'}
+                  </Typography>
+                </Box>
+                <Slider
+                  aria-label="Credit score"
+                  aria-describedby="credit-score-helper"
+                  value={field.value ?? creditScoreMin}
+                  min={creditScoreMin}
+                  max={creditScoreMax}
+                  step={1}
+                  disabled={!isCreditScoreKnown}
+                  valueLabelDisplay={isCreditScoreKnown ? 'auto' : 'off'}
+                  getAriaValueText={(value) => `Credit score ${value}`}
+                  onChange={(_, value) => {
+                    if (typeof value === 'number') {
+                      field.onChange(value)
+                      onValuesChange?.()
+                    }
+                  }}
+                  sx={{
+                    mt: 1,
+                    color: '#1976d2',
+                    '& .MuiSlider-thumb': {
+                      width: 18,
+                      height: 18,
+                      border: '2px solid white',
+                      boxShadow: '0 0 0 2px #1976d2',
+                    },
+                    '& .MuiSlider-rail': { opacity: 1, bgcolor: '#a8d3ff' },
+                    '& .MuiSlider-track': { border: 0 },
+                    '&.Mui-disabled': {
+                      color: '#a8d3ff',
+                      '& .MuiSlider-rail': { bgcolor: '#dceeff' },
+                    },
+                  }}
+                />
+                <Box className="flex justify-between text-[#617782]">
+                  <Typography component="span" sx={{ fontSize: 10 }}>
+                    {creditScoreMin}
+                  </Typography>
+                  <Typography component="span" sx={{ fontSize: 10 }}>
+                    {creditScoreMax}
+                  </Typography>
+                </Box>
+                <FormControlLabel
+                  className="m-0"
+                  control={
+                    <Checkbox
+                      checked={isCreditScoreKnown}
+                      onChange={(event) => {
+                        const known = event.target.checked
+                        setIsCreditScoreKnown(known)
+                        field.onChange(known ? (field.value ?? creditScoreMin) : undefined)
+                      }}
+                      size="small"
+                      sx={{
+                        color: 'var(--brand-navy)',
+                        '&.Mui-checked': { color: 'var(--brand-navy)' },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography
+                      component="span"
+                      className="text-[var(--brand-muted)]"
+                      sx={{ fontSize: 12 }}
+                    >
+                      I know my credit score
+                    </Typography>
+                  }
+                  sx={{ alignSelf: 'flex-start' }}
+                />
+                <FormHelperText id="credit-score-helper" className="mx-0">
+                  {errors.financialInfo?.creditScore?.message ??
+                    `Optional. Set a score between ${creditScoreMin} and ${creditScoreMax}, or leave it out.`}
+                </FormHelperText>
+              </FormControl>
+            )}
           />
         </Box>
-      </FormSection>
+      </FormSection>}
 
-      <FormSection title="Loan Details" icon="loan">
+      {activeStep === 2 && <FormSection title="Loan Details" icon="loan">
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
           <Controller
             name="loanDetails.loanType"
@@ -506,7 +663,12 @@ function LoanEligibilityForm({
             min={selectedProduct?.minAmount}
             max={selectedProduct?.maxAmount}
             error={Boolean(errors.loanDetails?.requestedAmount)}
-            helperText={errors.loanDetails?.requestedAmount?.message}
+            helperText={
+              errors.loanDetails?.requestedAmount?.message ??
+              (selectedProduct
+                ? `Available range: R${selectedProduct.minAmount.toLocaleString()}–R${selectedProduct.maxAmount.toLocaleString()}`
+                : undefined)
+            }
             {...register('loanDetails.requestedAmount', {
               valueAsNumber: true,
               required: validationRules.loanDetails.requestedAmount.required
@@ -553,27 +715,55 @@ function LoanEligibilityForm({
             )}
           />
         </Box>
-      </FormSection>
+      </FormSection>}
 
-      <Box className="flex items-center gap-3">
-        <Button
-          type="submit"
-          fullWidth
-          disabled={isSubmitting}
-          sx={{
-            bgcolor: 'var(--brand-navy)',
-            '&:hover': { bgcolor: 'var(--brand-navy-dark, #073b5c)' },
-            '&.Mui-disabled': { bgcolor: '#9bbbd4', color: '#fff' },
-            textTransform: 'none',
-          }}
-          startIcon={
-            <SvgIcon aria-hidden="true">
-              <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM7 7h4v4H7zm0 6h4v4H7zm6-6h4v2h-4zm0 4h4v2h-4zm0 2h4v5h-4z" />
-            </SvgIcon>
-          }
-        >
-          {isSubmitting ? 'Checking Eligibility…' : 'Check Eligibility'}
-        </Button>
+      <Box className="flex items-center justify-between gap-3">
+        {activeStep > 0 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setActiveStep((currentStep) => currentStep - 1)}
+            disabled={isSubmitting}
+            sx={{ textTransform: 'none' }}
+          >
+            Back
+          </Button>
+        ) : (
+          <Box />
+        )}
+        {activeStep < stepTitles.length - 1 ? (
+          <Button
+            type="button"
+            onClick={goToNextStep}
+            sx={{
+              minWidth: 140,
+              bgcolor: 'var(--brand-navy)',
+              '&:hover': { bgcolor: 'var(--brand-navy-dark, #073b5c)' },
+              textTransform: 'none',
+            }}
+          >
+            Continue
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            sx={{
+              minWidth: 180,
+              bgcolor: 'var(--brand-navy)',
+              '&:hover': { bgcolor: 'var(--brand-navy-dark, #073b5c)' },
+              '&.Mui-disabled': { bgcolor: '#9bbbd4', color: '#fff' },
+              textTransform: 'none',
+            }}
+            startIcon={
+              <SvgIcon aria-hidden="true">
+                <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM7 7h4v4H7zm0 6h4v4H7zm6-6h4v2h-4zm0 4h4v2h-4zm0 2h4v5h-4z" />
+              </SvgIcon>
+            }
+          >
+            {isSubmitting ? 'Checking Eligibility…' : 'Check Eligibility'}
+          </Button>
+        )}
       </Box>
     </Box>
   )
