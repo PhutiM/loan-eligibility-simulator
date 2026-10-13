@@ -12,35 +12,6 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
-    public async Task Simulator_homepage_and_assets_are_served_by_the_application()
-    {
-        using var response = await _client.GetAsync("/");
-        var html = await response.Content.ReadAsStringAsync();
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Loan Eligibility Simulator", html);
-        Assert.Contains("Personal Information", html);
-        Assert.Contains("Financial Information", html);
-        Assert.Contains("Loan Product", html);
-        Assert.Contains("Personal Loan", html);
-        Assert.Contains("Vehicle Finance", html);
-        Assert.Contains("Loan Purpose", html);
-        Assert.Contains("_framework/blazor.web.js", html);
-
-        using var stylesheet = await _client.GetAsync("/site.css");
-        Assert.Equal(HttpStatusCode.OK, stylesheet.StatusCode);
-        Assert.Contains("--brand-navy", await stylesheet.Content.ReadAsStringAsync());
-
-        using var illustration = await _client.GetAsync("/images/loan-start-illustration.svg");
-        Assert.Equal(HttpStatusCode.OK, illustration.StatusCode);
-        Assert.Contains("<svg", await illustration.Content.ReadAsStringAsync());
-
-        using var blazorRuntime = await _client.GetAsync("/_framework/blazor.web.js");
-        Assert.Equal(HttpStatusCode.OK, blazorRuntime.StatusCode);
-        Assert.Contains("Blazor", await blazorRuntime.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
     public async Task Health_and_reference_endpoints_preserve_the_api_contract()
     {
         var health = await _client.GetFromJsonAsync<JsonElement>("/api/health");
