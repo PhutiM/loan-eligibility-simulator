@@ -121,10 +121,10 @@ describe('LoanEligibilityPage', () => {
 
     expect(await screen.findByRole('form', { name: 'Loan eligibility application' })).toBeInTheDocument()
     expect(
-      screen.getAllByText(
+      screen.queryByText(
         'Enter your details to see your estimated eligibility, recommended loan amount and monthly repayments.',
       ),
-    ).toHaveLength(1)
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('spinbutton', { name: 'Age' })).toHaveValue(null)
     expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
   })

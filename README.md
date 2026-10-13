@@ -19,13 +19,22 @@ The frontend runs at <http://localhost:5173> and the API runs at <http://localho
 
 ## Run with Docker
 
-With Docker Engine and the Compose plugin installed, build and start the frontend and backend containers:
+The repository includes a production backend image in `Dockerfile.backend` and a production frontend image in `Dockerfile.frontend`. To build and run the full application, install Docker Engine and the Compose plugin, then run:
 
 ```sh
 docker compose up --build
 ```
 
-Open <http://localhost:8080>. The frontend container serves the production Vite build and proxies `/api` requests (including Swagger UI at `/api/docs`) to the backend container. The backend is reachable only within the Compose network. Stop the containers with `docker compose down`.
+Open <http://localhost:8080>. Compose builds and starts both images; Nginx serves the production Vite build and proxies `/api` requests (including Swagger UI at `/api/docs`) to the backend container. The backend is reachable only within the Compose network. Stop the containers with `docker compose down`.
+
+To build and run only the backend image:
+
+```sh
+docker build --file Dockerfile.backend --tag loan-eligibility-api .
+docker run --rm --publish 3000:3000 loan-eligibility-api
+```
+
+The API health check is available at <http://localhost:3000/api/health>; Swagger UI is at <http://localhost:3000/api/docs>. The backend container runs as a non-root user.
 
 ## Available commands
 

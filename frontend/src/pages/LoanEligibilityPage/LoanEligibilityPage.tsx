@@ -126,40 +126,45 @@ function LoanEligibilityPage() {
   }
 
   return (
-    <Box
-      className="grid grid-cols-2 gap-3 pt-3 max-md:grid-cols-1"
-    >
+    <Box className="loan-dashboard">
+      <Typography component="h1" className="sr-only">
+        Loan Eligibility Simulator
+      </Typography>
       <Card
         elevation={0}
-        className="col-span-2 self-start rounded-xl border border-[var(--brand-border)] bg-white/95 max-md:col-span-1"
+        className="loan-information-card rounded-xl border border-[#c8e1fa] bg-[#eff7ff]"
       >
-        <CardContent className="p-6 max-sm:p-5">
-          <Typography
-            component="h1"
-            variant="h4"
-            className="mb-2 text-[var(--brand-navy)]"
-            sx={{
-              fontSize: { xs: 24, sm: 28 },
-              fontWeight: 750,
-              letterSpacing: '-0.035em',
-              lineHeight: 1.2,
-            }}
+        <CardContent className="flex gap-2 p-3">
+          <Box
+            aria-hidden="true"
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#0877d1] text-xs font-bold text-white"
           >
-            Loan Eligibility Simulator
-          </Typography>
-          <Typography
-            component="p"
-            variant="body1"
-            className="max-w-xl text-[var(--brand-muted)]"
-            sx={{ fontSize: 14, lineHeight: 1.65 }}
-          >
-            Enter your details to see your estimated eligibility, recommended
-            loan amount and monthly repayments.
-          </Typography>
+            i
+          </Box>
+          <Box>
+            <Typography
+              component="h2"
+              variant="subtitle1"
+              className="text-[#0877d1]"
+              sx={{ fontSize: 13, fontWeight: 750 }}
+            >
+              Important Information
+            </Typography>
+            <Typography
+              component="p"
+              variant="body2"
+              className="mt-1 text-[var(--brand-muted)]"
+              sx={{ fontSize: 11, lineHeight: 1.5 }}
+            >
+              This is a simplified estimate, not a loan offer or credit
+              decision. Actual eligibility depends on credit history, verified
+              income, lender affordability rules, fees and other criteria.
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
 
-      <Box className="grid gap-3">
+      <Box className="loan-form-panel grid gap-3">
         {validationRules ? (
           <LoanEligibilityForm
             key={formKey}
@@ -178,41 +183,7 @@ function LoanEligibilityPage() {
         {loanProductsError && <Alert severity="error">{loanProductsError}</Alert>}
       </Box>
 
-      <Box className="flex h-full flex-col gap-3">
-        <Card
-          elevation={0}
-          className="rounded-xl border border-[#c8e1fa] bg-[#eff7ff]"
-        >
-          <CardContent className="flex gap-3 p-5 max-sm:p-4">
-            <Box
-              aria-hidden="true"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0877d1] text-sm font-bold text-white"
-            >
-              i
-            </Box>
-            <Box>
-              <Typography
-                component="h2"
-                variant="subtitle1"
-                className="text-[#0877d1]"
-                sx={{ fontSize: 14, fontWeight: 750 }}
-              >
-                Important Information
-              </Typography>
-              <Typography
-                component="p"
-                variant="body2"
-                className="mt-2 text-[var(--brand-muted)]"
-                sx={{ fontSize: 12, lineHeight: 1.65 }}
-              >
-                This is a simplified estimate, not a loan offer or credit
-                decision. Actual eligibility depends on credit history, verified
-                income, lender affordability rules, fees and other criteria.
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-
+      <Box className="loan-results-panel flex flex-col gap-3">
         {result ? (
           <Box className="flex flex-1 flex-col gap-3">
             <EligibilityResult
@@ -244,7 +215,7 @@ function LoanEligibilityPage() {
         ) : (
           <Card
             elevation={0}
-            className="h-full flex-1 overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white/95"
+            className="min-h-80 flex-1 overflow-hidden rounded-xl border border-[var(--brand-border)] bg-white/95"
           >
             <CardContent className="flex h-full flex-col p-0">
               <Summary description="Complete the form to see your personalised financial summary, including your estimated loan amount and monthly repayments." />

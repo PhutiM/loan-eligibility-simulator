@@ -56,9 +56,20 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: 'Loan Eligibility Simulator' }),
     ).toBeInTheDocument()
-    expect(await screen.findByRole('form', { name: 'Loan eligibility application' })).toBeInTheDocument()
+    const form = await screen.findByRole('form', { name: 'Loan eligibility application' })
+    expect(form).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Important Information' })).toBeInTheDocument()
+    const informationCard = screen
+      .getByRole('heading', { name: 'Important Information' })
+      .closest('.loan-information-card')
+    expect(informationCard).not.toBeNull()
+    if (!informationCard) {
+      throw new Error('Important Information card is missing')
+    }
+    expect(
+      informationCard.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
     expect(screen.queryByText(/Secure & Confidential/)).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
