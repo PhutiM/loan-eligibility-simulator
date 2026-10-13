@@ -17,6 +17,13 @@ const currency = new Intl.NumberFormat('en-ZA', {
 })
 
 function AffordabilityAnalysis({ analysis }: AffordabilityAnalysisProps) {
+  const scoreColors: Record<string, string> = {
+    good: 'bg-[#d1fae5] text-[#047857]',
+    fair: 'bg-[#fef3c7] text-[#b45309]',
+    poor: 'bg-[#fee2e2] text-[#b91c1c]',
+  }
+  const scoreColor =
+    scoreColors[analysis.affordabilityScore.toLowerCase()] ?? 'bg-[#e2e8f0] text-[#475569]'
   const metrics = [
     ['Disposable Income', currency.format(analysis.disposableIncome)],
     ['Debt to Income Ratio', `${analysis.debtToIncomeRatio.toFixed(1)}%`],
@@ -67,7 +74,7 @@ function AffordabilityAnalysis({ analysis }: AffordabilityAnalysisProps) {
           </Typography>
           <Typography
             component="p"
-            className="w-fit rounded-full bg-[#d1fae5] px-3 py-1 capitalize text-[#047857]"
+            className={`w-fit rounded-full px-3 py-1 capitalize ${scoreColor}`}
             sx={{ fontSize: 12, fontWeight: 700 }}
           >
             {analysis.affordabilityScore}
