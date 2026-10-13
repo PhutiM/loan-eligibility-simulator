@@ -5,17 +5,19 @@ import loanStartIllustration from '../../assets/loan-start-illustration.svg'
 
 type FinancialSummaryProps = {
   children?: ReactNode
+  className?: string
   title?: string
   description?: string
 }
 
 function Summary({
   children,
+  className,
   title = 'Ready to get started?',
   description = 'Complete the form to see your personalised financial summary, including your estimated loan amount and monthly repayments.',
 }: FinancialSummaryProps) {
   return (
-    <Box className="flex h-full flex-col justify-center px-6 py-6 max-sm:px-4">
+    <Box className={`flex h-full flex-col justify-center px-6 py-6 max-sm:px-4 ${className ?? ''}`}>
       <Box className="flex items-center justify-center gap-3">
         <Typography
           component="h2"

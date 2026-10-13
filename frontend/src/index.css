@@ -37,12 +37,14 @@ p {
   padding-top: 0.75rem;
 }
 
+.loan-side-panel {
+  display: contents;
+}
+
 .loan-information-card {
   grid-column: 2;
   grid-row: 1;
   align-self: start;
-  width: 100%;
-  max-width: 28rem;
 }
 
 .loan-form-panel {
@@ -66,12 +68,36 @@ p {
     grid-row: 1;
   }
 
-  .loan-form-panel {
+  .loan-results-panel {
     grid-column: 1;
     grid-row: 2;
+    min-height: 8rem;
   }
 
-  .loan-results-panel {
+  .loan-summary {
+    padding: 0.25rem 0.75rem;
+  }
+
+  .loan-summary h2 {
+    font-size: 13px !important;
+  }
+
+  .loan-summary img {
+    width: 4.5rem;
+    height: 3rem;
+  }
+
+  .loan-summary > div + div {
+    gap: 0.125rem;
+    padding-top: 0.25rem;
+  }
+
+  .loan-summary > div + div p {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+  }
+
+  .loan-form-panel {
     grid-column: 1;
     grid-row: 3;
   }
