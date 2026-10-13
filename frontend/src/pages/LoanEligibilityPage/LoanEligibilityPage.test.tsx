@@ -7,6 +7,7 @@ afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
 })
 
 const productsResponse = {
@@ -209,6 +210,45 @@ describe('LoanEligibilityPage', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
     expect(screen.getByRole('spinbutton', { name: 'Age' })).toHaveValue(null)
+  })
+
+  it('scrolls results into view on mobile after a successful eligibility check', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+    mockFetch({
+      eligibilityResult: {
+        isEligible: false,
+        approvalLikelihood: 20,
+        riskCategory: 'high',
+        decisionReason: 'Affordability criteria not met',
+      },
+      recommendedLoan: {
+        maxAmount: 0,
+        recommendedAmount: 0,
+        interestRate: 0,
+        monthlyPayment: 0,
+        totalRepayment: 0,
+      },
+      affordabilityAnalysis: {
+        disposableIncome: 0,
+        debtToIncomeRatio: 80,
+        loanToIncomeRatio: 0,
+        affordabilityScore: 'poor',
+      },
+    })
+    render(<LoanEligibilityPage />)
+
+    await enterValidApplication()
+    fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
+
+    await screen.findByRole('heading', { name: 'You are unlikely to be eligible' })
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' }),
+    )
   })
 
   it('shows validation errors returned by the API', async () => {
