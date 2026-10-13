@@ -380,10 +380,16 @@ function LoanEligibilityForm({
                     ])
                   }}
                   onBlur={field.onBlur}
-                  row
-                  className="gap-2"
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: 'minmax(0, 1fr)',
+                      sm: 'repeat(2, minmax(0, 1fr))',
+                    },
+                    gap: 1,
+                  }}
                 >
-                  {products.map(({ id, name }, index) => {
+                  {products.map(({ id, name, description }, index) => {
                     const selected = field.value === id
                     return (
                       <FormControlLabel
@@ -393,15 +399,47 @@ function LoanEligibilityForm({
                           <Radio
                             disabled={isLoadingProducts}
                             ref={index === 0 ? field.ref : undefined}
+                            slotProps={{
+                              input: {
+                                'aria-label': name,
+                                'aria-describedby': description
+                                  ? `loan-product-description-${id}`
+                                  : undefined,
+                              },
+                            }}
                             sx={{ '&.Mui-checked': { color: 'var(--brand-navy)' } }}
                           />
                         }
                         disabled={isLoadingProducts}
-                        label={name}
+                        label={
+                          <Box className="min-w-0">
+                            <Typography
+                              id={`loan-product-description-${id}`}
+                              component="span"
+                              className="block text-[var(--brand-navy)]"
+                              sx={{ fontSize: 13, fontWeight: 650 }}
+                            >
+                              {name}
+                            </Typography>
+                            {description && (
+                              <Typography
+                                component="span"
+                                className="mt-1 block whitespace-normal text-[var(--brand-muted)]"
+                                sx={{ fontSize: 11, lineHeight: 1.4 }}
+                              >
+                                {description}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
                         sx={{
                           m: 0,
+                          width: '100%',
+                          minWidth: 0,
+                          boxSizing: 'border-box',
                           px: 1.5,
-                          py: 0.5,
+                          py: 1,
+                          alignItems: 'flex-start',
                           border: '1px solid',
                           borderColor: selected ? 'var(--brand-navy)' : 'var(--brand-border)',
                           borderRadius: '8px',
@@ -411,6 +449,7 @@ function LoanEligibilityForm({
                             outline: '2px solid #0877d1',
                             outlineOffset: '2px',
                           },
+                          '& .MuiRadio-root': { mt: -0.5 },
                         }}
                       />
                     )

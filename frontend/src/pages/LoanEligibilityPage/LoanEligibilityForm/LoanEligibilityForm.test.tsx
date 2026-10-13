@@ -9,6 +9,7 @@ const loanProducts: LoanProduct[] = [
   {
     id: 'personal_loan',
     name: 'Personal Loan',
+    description: 'Flexible personal financing for various needs',
     minAmount: 5000,
     maxAmount: 300000,
     minTerm: 6,
@@ -18,6 +19,7 @@ const loanProducts: LoanProduct[] = [
   {
     id: 'vehicle_loan',
     name: 'Vehicle Finance',
+    description: 'Financing for new and used vehicles',
     minAmount: 50000,
     maxAmount: 1500000,
     minTerm: 12,
@@ -94,6 +96,11 @@ describe('Loan Eligibility Page Form', () => {
     )
     expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Personal Loan' })).not.toBeChecked()
+    expect(screen.getByText('Flexible personal financing for various needs')).toBeInTheDocument()
+    expect(screen.getByText('Financing for new and used vehicles')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Personal Loan/ }).closest('label')).toHaveStyle({
+      width: '100%',
+    })
     expect(screen.getByRole('combobox', { name: 'Loan Term' })).toHaveTextContent('Select an option')
     expect(screen.getByRole('combobox', { name: 'Loan Purpose' })).toHaveAttribute(
       'aria-disabled',

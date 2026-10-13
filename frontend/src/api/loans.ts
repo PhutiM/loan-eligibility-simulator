@@ -46,6 +46,7 @@ export type LoanRateRequest = {
 export type LoanProduct = {
   id: string
   name: string
+  description?: string
   minAmount: number
   maxAmount: number
   minTerm: number
@@ -203,6 +204,7 @@ export async function getLoanProducts(): Promise<LoanProduct[]> {
         typeof product.id === 'string' &&
         'name' in product &&
         typeof product.name === 'string' &&
+        (!('description' in product) || typeof product.description === 'string') &&
         'minAmount' in product &&
         typeof product.minAmount === 'number' &&
         'maxAmount' in product &&
