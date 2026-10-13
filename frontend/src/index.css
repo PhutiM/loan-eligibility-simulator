@@ -38,29 +38,34 @@ p {
 }
 
 .loan-side-panel {
-  display: contents;
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .loan-information-card {
-  grid-column: 2;
-  grid-row: 1;
   align-self: start;
 }
 
 .loan-form-panel {
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1;
 }
 
 .loan-results-panel {
-  grid-column: 2;
-  grid-row: 2;
+  flex: 1;
   min-height: 20rem;
 }
 
 @media (max-width: 767px) {
   .loan-dashboard {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .loan-side-panel {
+    display: contents;
   }
 
   .loan-information-card {
@@ -100,5 +105,10 @@ p {
   .loan-form-panel {
     grid-column: 1;
     grid-row: 3;
+  }
+
+  .loan-side-panel .loan-results-panel {
+    grid-column: 1;
+    grid-row: 2;
   }
 }
