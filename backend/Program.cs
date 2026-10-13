@@ -1,26 +1,20 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LoanEligibility.Api;
+using LoanEligibility.Api.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "3000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
-builder.Services.AddCors();
 
 var app = builder.Build();
-var frontendOrigin = Environment.GetEnvironmentVariable("FRONTEND_ORIGIN");
-
-app.UseCors(policy =>
-{
-    if (!string.IsNullOrWhiteSpace(frontendOrigin))
-    {
-        policy.WithOrigins(frontendOrigin).AllowAnyHeader().AllowAnyMethod();
-    }
-});
+app.UseAntiforgery();
 app.Use(async (context, next) =>
 {
     try
@@ -81,6 +75,10 @@ app.MapPost("/api/loans/calculate-rate", async (HttpRequest request) =>
         repayment.TotalRepayment,
         repayment.PaymentSchedule));
 });
+
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
 
