@@ -367,10 +367,14 @@ function LoanEligibilityForm({
                   value={field.value}
                   onChange={(_, value) => {
                     field.onChange(value)
-                    setValue('loanDetails.loanPurpose', '', { shouldValidate: true })
+                    setValue('loanDetails.loanPurpose', '')
                     setValue('loanDetails.requestedAmount', undefined)
                     setValue('loanDetails.loanTerm', undefined)
-                    clearErrors(['loanDetails.requestedAmount', 'loanDetails.loanTerm'])
+                    clearErrors([
+                      'loanDetails.loanPurpose',
+                      'loanDetails.requestedAmount',
+                      'loanDetails.loanTerm',
+                    ])
                   }}
                   onBlur={field.onBlur}
                   row

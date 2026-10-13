@@ -182,6 +182,25 @@ describe('Loan Eligibility Page Form', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
+  it('does not show purpose validation until submission and clears it on product change', async () => {
+    render(
+      <LoanEligibilityForm
+        onSubmit={vi.fn()}
+        products={loanProducts}
+        validationRules={validationRules}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
+    expect(screen.queryByText('Please select a loan purpose')).not.toBeInTheDocument()
+
+    fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
+    expect(await screen.findByText('Please select a loan purpose')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Vehicle Finance' }))
+    expect(screen.queryByText('Please select a loan purpose')).not.toBeInTheDocument()
+  })
+
   it('allows the optional credit score to be left blank', async () => {
     const onSubmit = vi.fn()
     render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
