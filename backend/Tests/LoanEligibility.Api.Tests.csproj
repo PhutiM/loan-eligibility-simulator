@@ -16,6 +16,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../backend/LoanEligibility.Api.csproj" />
+    <ProjectReference Include="../LoanEligibility.Api.csproj" />
   </ItemGroup>
 </Project>

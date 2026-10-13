@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Test backend
-        run: dotnet test backend.test/LoanEligibility.Api.Tests.csproj --configuration Release
+        run: dotnet test backend/Tests/LoanEligibility.Api.Tests.csproj --configuration Release
 
       - name: Test frontend with coverage thresholds
         run: npm run test:coverage --workspace frontend
