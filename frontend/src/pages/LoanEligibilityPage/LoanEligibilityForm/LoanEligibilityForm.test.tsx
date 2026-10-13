@@ -61,9 +61,10 @@ async function enterValidApplication() {
       target: { value },
     })
   }
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
+  fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
   const dropdownOptions = [
-    ['Employment Status', 'Employed'],
-    ['Loan Product', 'Personal Loan'],
     ['Loan Term', '24 months'],
     ['Loan Purpose', 'Home Improvement'],
   ] as const
@@ -91,9 +92,8 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.getByRole('combobox', { name: 'Employment Status' })).toHaveTextContent(
       'Select an option',
     )
-    expect(screen.getByRole('combobox', { name: 'Loan Product' })).toHaveTextContent(
-      'Select a loan product',
-    )
+    expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Personal Loan' })).not.toBeChecked()
     expect(screen.getByRole('combobox', { name: 'Loan Term' })).toHaveTextContent('Select an option')
     expect(screen.getByRole('combobox', { name: 'Loan Purpose' })).toHaveAttribute(
       'aria-disabled',
@@ -168,6 +168,20 @@ describe('Loan Eligibility Page Form', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
+  it('shows product validation feedback when no loan product is selected', async () => {
+    const onSubmit = vi.fn()
+    render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
+
+    fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
+
+    expect(await screen.findByText('Please select a loan product')).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
   it('allows the optional credit score to be left blank', async () => {
     const onSubmit = vi.fn()
     render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
@@ -190,12 +204,15 @@ describe('Loan Eligibility Page Form', () => {
   it('filters purpose and term options after selecting a product', async () => {
     render(<LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} />)
 
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loan Product' }))
-    fireEvent.click(await screen.findByRole('option', { name: 'Vehicle Finance' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Vehicle Finance' }))
 
     expect(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' })).toHaveAttribute(
       'min',
       '50000',
+    )
+    expect(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' })).toHaveAttribute(
+      'max',
+      '1500000',
     )
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loan Purpose' }))
     expect(await screen.findByRole('option', { name: 'New Vehicle' })).toBeInTheDocument()
@@ -203,6 +220,64 @@ describe('Loan Eligibility Page Form', () => {
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loan Term' }))
     expect(await screen.findByRole('option', { name: '72 months' })).toBeInTheDocument()
+  })
+
+  it('clears product-dependent values when switching and submits the new product payload', async () => {
+    const onSubmit = vi.fn()
+    render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
+
+    await enterValidApplication()
+    fireEvent.click(screen.getByRole('radio', { name: 'Vehicle Finance' }))
+
+    expect(screen.getByRole('combobox', { name: 'Loan Purpose' })).toHaveTextContent(
+      'Select a loan purpose',
+    )
+    expect(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' })).toHaveValue(null)
+    expect(screen.getByRole('combobox', { name: 'Loan Term' })).toHaveTextContent(
+      'Select an option',
+    )
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loan Purpose' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Used Vehicle' }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' }), {
+      target: { value: '400000' },
+    })
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Loan Term' }))
+    fireEvent.click(await screen.findByRole('option', { name: '72 months' }))
+    fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          loanDetails: {
+            loanType: 'vehicle_loan',
+            requestedAmount: 400000,
+            loanTerm: 72,
+            loanPurpose: 'used_vehicle',
+          },
+        }),
+      ),
+    )
+  })
+
+  it('announces loading and empty product states accessibly', () => {
+    const { rerender } = render(
+      <LoanEligibilityForm
+        onSubmit={vi.fn()}
+        products={loanProducts}
+        validationRules={validationRules}
+        isLoadingProducts
+      />,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading loan products…')
+    expect(screen.getByRole('radio', { name: 'Personal Loan' })).toBeDisabled()
+
+    rerender(
+      <LoanEligibilityForm onSubmit={vi.fn()} products={[]} validationRules={validationRules} />,
+    )
+    expect(screen.getByText('No loan products are currently available.')).toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
   })
 
   it('renders the eligibility action without a reset action in the form', () => {

@@ -97,11 +97,15 @@ async function enterValidApplication() {
   }
   const dropdownOptions = [
     ['Employment Status', 'Employed'],
-    ['Loan Product', 'Personal Loan'],
     ['Loan Term', '24 months'],
     ['Loan Purpose', 'Home Improvement'],
   ] as const
-  for (const [label, option] of dropdownOptions) {
+  for (const [label, option] of dropdownOptions.slice(0, 1)) {
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: label }))
+    fireEvent.click(await screen.findByRole('option', { name: option }))
+  }
+  fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
+  for (const [label, option] of dropdownOptions.slice(1)) {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: label }))
     fireEvent.click(await screen.findByRole('option', { name: option }))
   }
@@ -133,10 +137,9 @@ describe('LoanEligibilityPage', () => {
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Important Information' })).toBeInTheDocument()
     expect(screen.getByRole('form', { name: 'Loan eligibility application' })).toBeInTheDocument()
-    const productDropdown = screen.getByRole('combobox', { name: 'Loan Product' })
-    await waitFor(() => expect(productDropdown).not.toBeDisabled())
-    fireEvent.mouseDown(productDropdown)
-    fireEvent.click(await screen.findByRole('option', { name: 'Vehicle Finance' }))
+    const vehicleProduct = await screen.findByRole('radio', { name: 'Vehicle Finance' })
+    await waitFor(() => expect(vehicleProduct).not.toBeDisabled())
+    fireEvent.click(vehicleProduct)
     const purposeDropdown = screen.getByRole('combobox', { name: 'Loan Purpose' })
     expect(purposeDropdown).not.toBeDisabled()
     fireEvent.mouseDown(purposeDropdown)
