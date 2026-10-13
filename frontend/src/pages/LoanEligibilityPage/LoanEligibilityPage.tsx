@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -36,6 +36,7 @@ function LoanEligibilityPage() {
   const [validationRulesError, setValidationRulesError] = useState('')
   const [isLoadingLoanPurposes, setIsLoadingLoanPurposes] = useState(true)
   const [isLoadingValidationRules, setIsLoadingValidationRules] = useState(true)
+  const resultsPanelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -72,6 +73,16 @@ function LoanEligibilityPage() {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    if (
+      result &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 767px)').matches
+    ) {
+      resultsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [result])
 
   const checkEligibility = async (values: LoanEligibilityFormValues) => {
     setIsSubmitting(true)
@@ -165,26 +176,7 @@ function LoanEligibilityPage() {
           </CardContent>
         </Card>
 
-        <Box className="loan-form-panel grid gap-3">
-          {validationRules ? (
-            <LoanEligibilityForm
-              key={formKey}
-              onSubmit={checkEligibility}
-              products={products}
-              validationRules={validationRules}
-              isLoadingProducts={isLoadingLoanPurposes}
-              isSubmitting={isSubmitting}
-            />
-          ) : (
-            <Alert severity={validationRulesError ? 'error' : 'info'}>
-              {validationRulesError || (isLoadingValidationRules ? 'Loading validation rules…' : '')}
-            </Alert>
-          )}
-          {apiError && <Alert severity="error">{apiError}</Alert>}
-          {loanProductsError && <Alert severity="error">{loanProductsError}</Alert>}
-        </Box>
-
-        <Box className="loan-results-panel flex flex-col gap-3">
+        <Box ref={resultsPanelRef} className="loan-results-panel flex flex-col gap-3">
           {result ? (
             <Box className="flex flex-1 flex-col gap-3">
               <EligibilityResult
@@ -227,6 +219,25 @@ function LoanEligibilityPage() {
             </Card>
           )}
         </Box>
+      </Box>
+
+      <Box className="loan-form-panel grid gap-3">
+        {validationRules ? (
+          <LoanEligibilityForm
+            key={formKey}
+            onSubmit={checkEligibility}
+            products={products}
+            validationRules={validationRules}
+            isLoadingProducts={isLoadingLoanPurposes}
+            isSubmitting={isSubmitting}
+          />
+        ) : (
+          <Alert severity={validationRulesError ? 'error' : 'info'}>
+            {validationRulesError || (isLoadingValidationRules ? 'Loading validation rules…' : '')}
+          </Alert>
+        )}
+        {apiError && <Alert severity="error">{apiError}</Alert>}
+        {loanProductsError && <Alert severity="error">{loanProductsError}</Alert>}
       </Box>
     </Box>
   )
