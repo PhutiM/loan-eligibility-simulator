@@ -54,3 +54,5 @@ Invalid requests return HTTP `400` with an `error` and a `details` array contain
 The backend is deployed separately by Render using the root `render.yaml` Blueprint. In Render, create a new Blueprint and select this repository; the Blueprint builds `Dockerfile.backend`, checks `/api/health`, and automatically deploys commits from `main`. Add the repository Actions variable `VITE_API_BASE_URL` with the backend's public HTTPS origin shown by Render (for example, `https://loan-eligibility-api.onrender.com`, without a trailing slash). The workflow uses the repository name as the GitHub Pages base path.
 
 The Blueprint configures `FRONTEND_ORIGIN=https://phutim.github.io` so browsers permit API requests from the GitHub Pages site. The Pages project path is not part of this origin. For local development, leave `VITE_API_BASE_URL` unset; Vite proxies `/api` to `localhost:3000`.
+
+The ASP.NET Core API endpoints are implemented by `LoanController`, which conforms to `ILoanController`. Request validation and loan calculations are kept in the backend service and helper classes.

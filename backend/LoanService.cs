@@ -1,12 +1,10 @@
-using System.Globalization;
 using System.Text.Json;
+using static LoanEligibility.Api.LoanHelpers;
 
 namespace LoanEligibility.Api;
 
 internal static class LoanService
 {
-    private const double NumberEpsilon = 2.2204460492503131e-16;
-
     public static readonly LoanProduct[] Products =
     [
         new(
@@ -65,13 +63,6 @@ internal static class LoanService
                 "Loan term must be between 6 and 60 months")
         }
     };
-
-    public static async Task<JsonDocument> ReadJsonBodyAsync(HttpRequest request)
-    {
-        using var reader = new StreamReader(request.Body);
-        var body = await reader.ReadToEndAsync(request.HttpContext.RequestAborted);
-        return JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
-    }
 
     public static EligibilityAssessment ValidateEligibilityRequest(JsonElement body)
     {
@@ -273,63 +264,6 @@ internal static class LoanService
                 disposableIncome, debtToIncomeRatio, loanToIncomeRatio, affordabilityScore));
     }
 
-    private static void ValidateNumber(
-        JsonElement value,
-        string field,
-        List<FieldError> errors,
-        double? min = null,
-        double? max = null,
-        bool integer = false,
-        string? errorMessage = null)
-    {
-        if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var number) || !double.IsFinite(number))
-        {
-            errors.Add(new FieldError(field, errorMessage ?? $"{field} must be a number"));
-            return;
-        }
-        if (integer && number != Math.Truncate(number))
-        {
-            errors.Add(new FieldError(field, errorMessage ?? $"{field} must be an integer"));
-            return;
-        }
-        if (min is not null && number < min)
-        {
-            errors.Add(new FieldError(field, errorMessage ?? $"{field} must be at least {FormatNumber(min.Value)}"));
-            return;
-        }
-        if (max is not null && number > max)
-            errors.Add(new FieldError(field, errorMessage ?? $"{field} must be at most {FormatNumber(max.Value)}"));
-    }
-
-    private static double RoundMoney(double amount) =>
-        Math.Floor((amount + NumberEpsilon) * 100 + 0.5) / 100;
-
-    private static int JsRound(double value) => (int)Math.Floor(value + 0.5);
-
-    private static string FormatNumber(double number) =>
-        number.ToString("N0", CultureInfo.InvariantCulture);
-
-    private static bool IsObject(JsonElement value) => value.ValueKind == JsonValueKind.Object;
-
-    private static JsonElement GetObject(JsonElement parent, string property)
-    {
-        var value = GetProperty(parent, property);
-        return IsObject(value) ? value : default;
-    }
-
-    private static JsonElement GetProperty(JsonElement parent, string property) =>
-        parent.ValueKind == JsonValueKind.Object && parent.TryGetProperty(property, out var value)
-            ? value
-            : default;
-
-    private static string? GetString(JsonElement value) =>
-        value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-
-    private static double GetNumber(JsonElement value) =>
-        value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var number) ? number : 0;
-
-    private static double? GetNullableNumber(JsonElement value) =>
-        value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var number) ? number : null;
 }
 
 internal sealed record LoanProduct(
