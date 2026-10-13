@@ -1,11 +1,12 @@
 # Loan Eligibility Simulator
 
-React, Vite, TypeScript, React Hook Form, Material UI, and Tailwind CSS frontend with a Node.js/Express backend. The eligibility form validates applicant, financial, and loan details before submitting to the backend and showing the result.
+React, Vite, TypeScript, React Hook Form, Material UI, and Tailwind CSS frontend with a C# ASP.NET Core backend. The eligibility form validates applicant, financial, and loan details before submitting to the backend and showing the result.
 
 ## Requirements
 
 - Node.js 20 or newer
 - npm 10 or newer
+- .NET 10 SDK or newer
 
 ## Getting started
 
@@ -14,7 +15,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at <http://localhost:5173> and the API runs at <http://localhost:3000>. Vite proxies `/api` requests to the backend during development.
+The frontend runs at <http://localhost:5173> and the API runs at <http://localhost:3000>. Vite proxies `/api` requests to the ASP.NET Core backend during development.
 
 ## Run with Docker
 
@@ -32,8 +33,8 @@ Open <http://localhost:8080>. The frontend container serves the production Vite 
 - `npm run build` — type-check and build the frontend
 - `npm run lint` — lint the frontend
 - `npm run test:coverage --workspace frontend` — run frontend tests and enforce 80% statement, branch, function, and line coverage
-- `npm test --workspace backend` — test the backend API
-- `npm run start --workspace backend` — start the backend without watch mode
+- `dotnet test backend.test/LoanEligibility.Api.Tests.csproj` — test the backend API
+- `dotnet run --project backend/LoanEligibility.Api.csproj` — start the backend
 
 Swagger UI is available at <http://localhost:3000/api/docs>, and the OpenAPI document is served at <http://localhost:3000/api/openapi.yaml>.
 
@@ -55,3 +56,5 @@ The backend is deployed separately by Render using the root `render.yaml` Bluepr
 The Blueprint configures `FRONTEND_ORIGIN=https://phutim.github.io` so browsers permit API requests from the GitHub Pages site. The Pages project path is not part of this origin. For local development, leave `VITE_API_BASE_URL` unset; Vite proxies `/api` to `localhost:3000`.
 
 To deploy an additional Docker-based frontend on Render while keeping GitHub Pages, create a separate **Web Service** from this repository and set **Runtime** to Docker, **Root Directory** to `.`, **Dockerfile Path** to `./Dockerfile.frontend`, and **Health Check Path** to `/`. Set the `API_UPSTREAM` environment variable to the backend's public origin (for example, `https://loan-eligibility-simulator.onrender.com`, without a trailing slash); Render provides the `PORT` variable automatically. Nginx serves the frontend and proxies `/api` requests to the backend. Create this frontend service separately rather than reapplying the root Blueprint, which also defines the API service. The local Docker Compose setup uses `http://backend:3000` as its upstream.
+
+The ASP.NET Core API endpoints are implemented by `LoanController`, which conforms to `ILoanController`. Request validation and loan calculations are kept in the backend service and helper classes.

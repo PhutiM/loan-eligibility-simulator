@@ -20,6 +20,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
@@ -30,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Test backend
-        run: npm test --workspace backend
+        run: dotnet test backend.test/LoanEligibility.Api.Tests.csproj --configuration Release
 
       - name: Test frontend with coverage thresholds
         run: npm run test:coverage --workspace frontend
