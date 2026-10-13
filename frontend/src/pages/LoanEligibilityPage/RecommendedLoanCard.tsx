@@ -47,14 +47,14 @@ function RecommendedLoanCard({
             className="text-[var(--brand-navy)]"
             sx={{ fontSize: 15, fontWeight: 750 }}
           >
-            Loan Details
+            Loan recommendation details
           </Typography>
         </Box>
 
         <Box className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
           <Box className="border-r border-[#dce9f6] pr-4 max-sm:border-r-0 max-sm:border-b max-sm:pb-3">
             <Typography component="p" className="text-[var(--brand-muted)]" sx={{ fontSize: 12 }}>
-              Requested Amount
+              Recommended Amount
             </Typography>
             <Typography
               component="p"

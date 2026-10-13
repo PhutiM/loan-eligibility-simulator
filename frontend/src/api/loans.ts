@@ -141,6 +141,8 @@ function isEligibilityResponse(value: unknown): value is EligibilityResponse {
     typeof recommendedLoan.monthlyPayment === 'number' &&
     typeof recommendedLoan.totalRepayment === 'number' &&
     typeof affordabilityAnalysis.disposableIncome === 'number' &&
+    typeof affordabilityAnalysis.debtToIncomeRatio === 'number' &&
+    typeof affordabilityAnalysis.loanToIncomeRatio === 'number' &&
     typeof affordabilityAnalysis.affordabilityScore === 'string'
   )
 }

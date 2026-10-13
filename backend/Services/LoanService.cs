@@ -222,6 +222,8 @@ internal sealed class LoanService : ILoanService
             80 + (creditScore - 650) * 0.1
             - Math.Max(0, debtToIncomeRatio - 20) * 0.5
             + (employed ? 5 : -20))));
+        if (!isEligible)
+            approvalLikelihood = Math.Min(approvalLikelihood, 35);
 
         return new EligibilityResponse(
             new EligibilityResult(
