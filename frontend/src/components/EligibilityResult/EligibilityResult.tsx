@@ -11,24 +11,19 @@ function EligibilityResult({
   isEligible,
   approvalLikelihood,
 }: EligibilityResultProps) {
-  const likelihood = Math.max(0, Math.min(100, Math.round(approvalLikelihood)))
-  const isLikely = isEligible && likelihood >= 70
-  const title = isLikely
-    ? 'You are likely eligible!'
-    : isEligible
-      ? 'You may be eligible'
-      : 'You are unlikely to be eligible'
-  const description =
-    likelihood >= 70
-      ? 'Based on the information provided, you have a high chance of approval.'
-      : likelihood >= 40
-        ? 'Based on the information provided, you have a moderate chance of approval.'
-        : 'Based on the information provided, your chance of approval is low.'
+  const score = Math.max(0, Math.min(100, Math.round(approvalLikelihood)))
+  const title = isEligible
+    ? 'Positive simulator result'
+    : 'Further review recommended'
+  const description = isEligible
+    ? "Your details meet the simulator's current screening criteria."
+    : "Your details don't meet the simulator's current screening criteria."
 
   return (
+    <>
     <Box
       role="status"
-      aria-label={`${title} Approval likelihood: ${likelihood}%`}
+      aria-label={`${title}. Simulator score: ${score} out of 100.`}
       className={`flex items-center justify-between gap-5 rounded-xl border px-5 py-4 max-sm:gap-3 max-sm:px-4 ${
         isEligible
           ? 'border-emerald-200 bg-emerald-50'
@@ -77,16 +72,16 @@ function EligibilityResult({
           aria-hidden="true"
           className="grid h-16 w-16 place-items-center rounded-full"
           sx={{
-            background: `conic-gradient(${isEligible ? '#059669' : '#e63934'} ${likelihood}%, #dce5e8 ${likelihood}% 100%)`,
+            background: `conic-gradient(${isEligible ? '#059669' : '#e63934'} ${score}%, #dce5e8 ${score}% 100%)`,
           }}
         >
           <Box className="grid h-[52px] w-[52px] place-items-center rounded-full bg-white">
             <Typography
               component="span"
               className="text-[var(--brand-navy)]"
-              sx={{ fontSize: 15, fontWeight: 750 }}
+              sx={{ fontSize: 13, fontWeight: 750 }}
             >
-              {likelihood}%
+              {score}/100
             </Typography>
           </Box>
         </Box>
@@ -95,10 +90,19 @@ function EligibilityResult({
           className={isEligible ? 'text-emerald-700' : 'text-red-700'}
           sx={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}
         >
-          Approval Likelihood
+          Simulator score
         </Typography>
       </Box>
     </Box>
+    <Typography
+      component="p"
+      className="mt-1 text-[var(--brand-muted)]"
+      sx={{ fontSize: 11, lineHeight: 1.5 }}
+    >
+      The simulator score is a rules-based estimate, not a probability of approval
+      or a lender decision.
+    </Typography>
+    </>
   )
 }
 

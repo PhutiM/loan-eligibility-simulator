@@ -180,9 +180,11 @@ function LoanEligibilityPage() {
                 className="mt-2 text-[var(--brand-muted)] max-md:mt-1"
                 sx={{ fontSize: { xs: 11, md: 12 }, lineHeight: { xs: 1.5, md: 1.65 } }}
               >
-                This is a simplified estimate, not a loan offer or credit
-                decision. Actual eligibility depends on credit history, verified
-                income, lender affordability rules, fees and other criteria.
+                This rules-based simulator is not a loan offer, lender decision,
+                or probability of approval. Its score reflects the information
+                entered, while actual eligibility depends on credit history,
+                verified income, lender affordability rules, fees and other
+                criteria.
               </Typography>
             </Box>
           </CardContent>
@@ -238,7 +240,7 @@ function LoanEligibilityPage() {
         </Box>
       </Box>
 
-      <Box className="loan-form-panel grid gap-3">
+      <Box className="loan-form-panel grid content-start gap-3">
         {validationRules ? (
           <LoanEligibilityForm
             key={formKey}

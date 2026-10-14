@@ -84,31 +84,42 @@ function mockFetch(eligibilityResponse?: unknown | (() => unknown)) {
 
 async function enterValidApplication() {
   await screen.findByRole('form', { name: 'Loan eligibility application' })
-  const values = [
+  const personalValues = [
     ['Age', '35'],
     ['Employment Duration (months)', '24'],
-    ['Monthly Income (ZAR)', '25000'],
-    ['Monthly Expenses (ZAR)', '15000'],
-    ['Existing Debt (ZAR)', '5000'],
-    ['Credit Score (optional)', '650'],
   ] as const
-
-  for (const [label, value] of values) {
+  for (const [label, value] of personalValues) {
     fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
       target: { value },
     })
   }
-  const dropdownOptions = [
-    ['Employment Status', 'Employed'],
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('spinbutton', { name: 'Monthly Income (ZAR)' })
+
+  const financialValues = [
+    ['Monthly Income (ZAR)', '25000'],
+    ['Monthly Expenses (ZAR)', '15000'],
+    ['Existing Debt (ZAR)', '5000'],
+  ] as const
+
+  for (const [label, value] of financialValues) {
+    fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
+      target: { value },
+    })
+  }
+  fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
+  fireEvent.keyDown(screen.getByRole('slider', { name: 'Credit score' }), { key: 'End' })
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('radio', { name: 'Personal Loan' })
+
+  fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
+  const loanOptions = [
     ['Loan Term', '24 months'],
     ['Loan Purpose', 'Home Improvement'],
   ] as const
-  for (const [label, option] of dropdownOptions.slice(0, 1)) {
-    fireEvent.mouseDown(screen.getByRole('combobox', { name: label }))
-    fireEvent.click(await screen.findByRole('option', { name: option }))
-  }
-  fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
-  for (const [label, option] of dropdownOptions.slice(1)) {
+  for (const [label, option] of loanOptions) {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: label }))
     fireEvent.click(await screen.findByRole('option', { name: option }))
   }
@@ -129,14 +140,15 @@ describe('LoanEligibilityPage', () => {
       ),
     ).not.toBeInTheDocument()
     expect(screen.getByRole('spinbutton', { name: 'Age' })).toHaveValue(null)
-    expect(screen.getByRole('button', { name: 'Check Eligibility' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Check Eligibility' })).not.toBeInTheDocument()
   })
 
   it('loads products and filters purpose options by the selected product', async () => {
     const fetchMock = mockFetch()
     render(<LoanEligibilityPage />)
 
-    await screen.findByRole('form', { name: 'Loan eligibility application' })
+    await enterValidApplication()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Important Information' })).toBeInTheDocument()
     expect(screen.getByRole('form', { name: 'Loan eligibility application' })).toBeInTheDocument()
@@ -191,15 +203,15 @@ describe('LoanEligibilityPage', () => {
       body: JSON.stringify({
         loanAmount: 150000,
         loanTerm: 24,
-        creditScore: 650,
+        creditScore: 850,
         loanType: 'personal_loan',
       }),
     }),
     )
     expect(
-      await screen.findByRole('heading', { name: 'You are likely eligible!' }),
+      await screen.findByRole('heading', { name: 'Positive simulator result' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText('85/100')).toBeInTheDocument()
     expect(
       await screen.findByRole('heading', { name: 'Loan recommendation details' }),
     ).toBeInTheDocument()
@@ -208,6 +220,8 @@ describe('LoanEligibilityPage', () => {
     expect(screen.getByRole('heading', { name: 'Affordability Analysis' })).toBeInTheDocument()
     expect(screen.getByText('Risk Category')).toBeInTheDocument()
     expect(screen.getByText('Decision Reason')).toBeInTheDocument()
+    expect(screen.getByText('Simulator score')).toBeInTheDocument()
+    expect(screen.getByText(/not a probability of approval or a lender decision/)).toBeInTheDocument()
     expect(screen.getByText('Debt to Income Ratio')).toBeInTheDocument()
     expect(screen.getByText('Affordability Score')).toBeInTheDocument()
     expect(screen.getByText(/7,096\.10/)).toBeInTheDocument()
@@ -250,17 +264,18 @@ describe('LoanEligibilityPage', () => {
 
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
-    expect(await screen.findByText('85%')).toBeInTheDocument()
+    expect(await screen.findByText('85/100')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Credit Score (optional)' }), {
-      target: { value: '600' },
-    })
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
 
-    expect(screen.queryByText('85%')).not.toBeInTheDocument()
+    expect(screen.queryByText('85/100')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await screen.findByRole('radio', { name: 'Personal Loan' })
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
-    expect(await screen.findByText('42%')).toBeInTheDocument()
+    expect(await screen.findByText('42/100')).toBeInTheDocument()
   })
 
   it('scrolls results into view on mobile after a successful eligibility check', async () => {
@@ -296,7 +311,7 @@ describe('LoanEligibilityPage', () => {
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
 
-    await screen.findByRole('heading', { name: 'You are unlikely to be eligible' })
+    await screen.findByRole('heading', { name: 'Further review recommended' })
     await waitFor(() =>
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' }),
     )
@@ -437,7 +452,7 @@ describe('LoanEligibilityPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'You are unlikely to be eligible' }),
+      await screen.findByRole('heading', { name: 'Further review recommended' }),
     ).toBeInTheDocument()
   })
 })
