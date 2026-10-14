@@ -1,15 +1,17 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import type { ReactNode } from 'react'
 
 type ApplicationStepperProps = {
   steps: string[]
   activeStep: number
+  children: ReactNode
 }
 
-function ApplicationStepper({ steps, activeStep }: ApplicationStepperProps) {
+function ApplicationStepper({ steps, activeStep, children }: ApplicationStepperProps) {
   return (
     <Box component="nav" aria-label="Application progress">
-      <Box component="ol" className="m-0 flex list-none p-0">
+      <Box component="ol" className="m-0 flex list-none flex-col p-0">
         {steps.map((step, index) => {
           const isCompleted = index < activeStep
           const isActive = index === activeStep
@@ -24,17 +26,17 @@ function ApplicationStepper({ steps, activeStep }: ApplicationStepperProps) {
               component="li"
               key={step}
               aria-current={isActive ? 'step' : undefined}
-              className="min-w-0 flex-1"
+              className={`relative flex gap-4 ${index < steps.length - 1 ? 'pb-5' : ''}`}
             >
-              <Box className="relative mb-4 flex h-9 items-center justify-center">
+              <Box className="relative flex w-9 shrink-0 justify-center">
                 {index < steps.length - 1 && (
                   <Box
                     aria-hidden="true"
-                    className={`absolute left-1/2 top-1/2 z-0 h-1 w-full -translate-y-1/2 rounded-full ${
+                    className={`absolute left-1/2 top-9 bottom-0 z-0 w-0.5 -translate-x-1/2 ${
                       isCompleted
                         ? 'bg-emerald-600'
                         : isActive
-                          ? 'bg-[linear-gradient(to_right,#1976d2_50%,#a8d3ff_50%)]'
+                          ? 'bg-[linear-gradient(to_bottom,#1976d2_50%,#a8d3ff_50%)]'
                           : 'bg-[#a8d3ff]'
                     }`}
                   />
@@ -58,38 +60,36 @@ function ApplicationStepper({ steps, activeStep }: ApplicationStepperProps) {
                   ) : null}
                 </Box>
               </Box>
-              <Typography
-                component="p"
-                className="mb-1 text-center uppercase tracking-wider text-[var(--brand-muted)]"
-                sx={{ fontSize: 10, fontWeight: 650 }}
-              >
-                Step {index + 1}
-              </Typography>
-              <Typography
-                component="p"
-                className="text-center text-[var(--brand-navy)]"
-                sx={{
-                  fontSize: { xs: 10, sm: 14 },
-                  fontWeight: 700,
-                  lineHeight: 1.25,
-                  minHeight: { xs: 28, sm: 'auto' },
-                }}
-              >
-                {step}
-              </Typography>
-              <Typography
-                component="p"
-                className={
-                  isCompleted
-                    ? 'text-emerald-700'
-                    : isActive
-                      ? 'text-[#1976d2]'
-                      : 'text-[var(--brand-muted)]'
-                }
-                sx={{ fontSize: { xs: 9, sm: 12 }, fontWeight: 650, textAlign: 'center' }}
-              >
-                {status}
-              </Typography>
+              <Box className="min-w-0 flex-1 pt-0.5">
+                <Typography
+                  component="p"
+                  className="mb-1 uppercase tracking-wider text-[var(--brand-muted)]"
+                  sx={{ fontSize: 10, fontWeight: 650 }}
+                >
+                  Step {index + 1}
+                </Typography>
+                <Typography
+                  component="p"
+                  className="text-[var(--brand-navy)]"
+                  sx={{ fontSize: 14, fontWeight: 700, lineHeight: 1.25 }}
+                >
+                  {step}
+                </Typography>
+                <Typography
+                  component="p"
+                  className={
+                    isCompleted
+                      ? 'text-emerald-700'
+                      : isActive
+                        ? 'text-[#1976d2]'
+                        : 'text-[var(--brand-muted)]'
+                  }
+                  sx={{ fontSize: 12, fontWeight: 650 }}
+                >
+                  {status}
+                </Typography>
+                {isActive && <Box className="pt-4">{children}</Box>}
+              </Box>
             </Box>
           )
         })}

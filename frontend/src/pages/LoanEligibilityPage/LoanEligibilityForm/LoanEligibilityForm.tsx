@@ -8,8 +8,6 @@ import {
   type SubmitHandler,
 } from 'react-hook-form'
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Checkbox from '@mui/material/Checkbox'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
@@ -104,26 +102,20 @@ function FormSection({
   children: ReactNode
 }) {
   return (
-    <Card
-      component="section"
-      variant="outlined"
-      className="rounded-xl border-[var(--brand-border)] bg-white"
-    >
-      <CardContent className="p-5 max-sm:p-4">
-        <Box className="mb-4 flex items-center gap-3">
-          <SectionIcon kind={icon} />
-          <Typography
-            component="h2"
-            variant="subtitle1"
-            className="text-[var(--brand-navy)]"
-            sx={{ fontSize: 15, fontWeight: 750 }}
-          >
-            {title}
-          </Typography>
-        </Box>
-        {children}
-      </CardContent>
-    </Card>
+    <Box component="section">
+      <Box className="mb-5 flex items-center gap-3">
+        <SectionIcon kind={icon} />
+        <Typography
+          component="h2"
+          variant="subtitle1"
+          className="text-[var(--brand-navy)]"
+          sx={{ fontSize: 15, fontWeight: 750 }}
+        >
+          {title}
+        </Typography>
+      </Box>
+      {children}
+    </Box>
   )
 }
 
@@ -234,21 +226,21 @@ function LoanEligibilityForm({
       onSubmit={handleSubmit(submitForm, handleInvalidSubmit)}
       onChange={onValuesChange}
     >
-      <Box className="rounded-xl border border-[var(--brand-border)] bg-white px-5 py-5 max-sm:px-4">
-        <ApplicationStepper steps={stepTitles} activeStep={activeStep} />
-        <Typography
-          component="p"
-          className="mt-5 text-[var(--brand-muted)]"
-          sx={{ fontSize: 12, lineHeight: 1.5 }}
-        >
-          {activeStep === 0 &&
-            'Tell us a little about yourself and your current employment. You can go back to edit any answers.'}
-          {activeStep === 1 &&
-            'Enter monthly amounts in rand. Your credit score is optional.'}
-          {activeStep === 2 &&
-            'Choose a loan product to see its available amount and repayment term ranges.'}
-        </Typography>
-      </Box>
+      <Box className="rounded-xl border border-[var(--brand-border)] bg-white p-5 max-sm:p-4">
+        <ApplicationStepper steps={stepTitles} activeStep={activeStep}>
+          <Box className="grid content-start gap-5">
+            <Typography
+              component="p"
+              className="text-[var(--brand-muted)]"
+              sx={{ fontSize: 12, lineHeight: 1.5 }}
+            >
+              {activeStep === 0 &&
+                'Tell us a little about yourself and your current employment. You can go back to edit any answers.'}
+              {activeStep === 1 &&
+                'Enter monthly amounts in rand. Your credit score is optional.'}
+              {activeStep === 2 &&
+                'Choose a loan product to see its available amount and repayment term ranges.'}
+            </Typography>
 
       {activeStep === 0 && <FormSection title="Personal Information" icon="person">
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
@@ -490,7 +482,7 @@ function LoanEligibilityForm({
       </FormSection>}
 
       {activeStep === 2 && <FormSection title="Loan Details" icon="loan">
-        <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
+        <Box className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
           <Controller
             name="loanDetails.loanType"
             control={control}
@@ -508,7 +500,7 @@ function LoanEligibilityForm({
                 component="fieldset"
                 fullWidth
                 error={Boolean(errors.loanDetails?.loanType)}
-                className="col-span-3 max-sm:col-span-1"
+                className="col-span-2 max-sm:col-span-1"
               >
                 <FormLabel
                   id="loan-product-label"
@@ -643,7 +635,7 @@ function LoanEligibilityForm({
             }}
             render={({ field }) => (
               <Dropdown
-                className="col-span-3 max-sm:col-span-1"
+                className="col-span-2 max-sm:col-span-1"
                 label="Loan Purpose"
                 options={purposeOptions}
                 {...field}
@@ -655,7 +647,7 @@ function LoanEligibilityForm({
             )}
           />
           <Textbox
-            className="col-span-2 max-sm:col-span-1"
+            className="col-span-1"
             label="Requested Loan Amount (ZAR)"
             type="number"
             placeholder="Enter Requested Loan Amount"
@@ -764,6 +756,9 @@ function LoanEligibilityForm({
             {isSubmitting ? 'Checking Eligibility…' : 'Check Eligibility'}
           </Button>
         )}
+      </Box>
+          </Box>
+        </ApplicationStepper>
       </Box>
     </Box>
   )
