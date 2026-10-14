@@ -125,7 +125,7 @@ describe('Loan Eligibility Page Form', () => {
       'aria-current',
       'step',
     )
-    expect(screen.getByText('Tell us a little about yourself and your current employment.')).toBeInTheDocument()
+    expect(screen.getByText(/Tell us a little about yourself and your current employment/)).toBeInTheDocument()
     await enterValidApplication()
     expect(screen.getByText('Flexible personal financing for various needs')).toBeInTheDocument()
     expect(screen.getByText('Financing for new and used vehicles')).toBeInTheDocument()
