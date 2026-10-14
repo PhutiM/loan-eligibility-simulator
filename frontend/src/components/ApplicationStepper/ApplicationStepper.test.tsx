@@ -10,7 +10,9 @@ describe('ApplicationStepper', () => {
       <ApplicationStepper
         steps={['Personal details', 'Financial information', 'Loan details']}
         activeStep={1}
-      />,
+      >
+        <div>Current step form</div>
+      </ApplicationStepper>,
     )
 
     expect(screen.getByRole('navigation', { name: 'Application progress' })).toBeInTheDocument()
@@ -20,6 +22,9 @@ describe('ApplicationStepper', () => {
     expect(screen.getByText('Financial information').closest('li')).toHaveAttribute(
       'aria-current',
       'step',
+    )
+    expect(screen.getByText('Current step form').closest('li')).toBe(
+      screen.getByText('Financial information').closest('li'),
     )
   })
 })

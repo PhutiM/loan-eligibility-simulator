@@ -121,7 +121,7 @@ describe('Loan Eligibility Page Form', () => {
       'Select an option',
     )
     expect(screen.getByRole('navigation', { name: 'Application progress' })).toBeInTheDocument()
-    expect(screen.getByText('Personal Details').closest('li')).toHaveAttribute(
+    expect(screen.getAllByText('Personal Details')[0].closest('li')).toHaveAttribute(
       'aria-current',
       'step',
     )
