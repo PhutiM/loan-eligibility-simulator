@@ -229,7 +229,6 @@ function LoanEligibilityForm({
       <Box className="rounded-xl border border-[var(--brand-border)] bg-white p-5 max-sm:p-4">
         <ApplicationStepper steps={stepTitles} activeStep={activeStep}>
           <Box className="grid content-start gap-5">
-          <Box>
             <Typography
               component="p"
               className="text-[var(--brand-muted)]"
@@ -242,10 +241,9 @@ function LoanEligibilityForm({
               {activeStep === 2 &&
                 'Choose a loan product to see its available amount and repayment term ranges.'}
             </Typography>
-          </Box>
 
       {activeStep === 0 && <FormSection title="Personal Information" icon="person">
-        <Box className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+        <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
           <Textbox
             label="Age"
             type="number"
