@@ -246,6 +246,7 @@ function LoanEligibilityForm({
         <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
           <Textbox
             label="Age"
+            required={validationRules.personalInfo.age.required}
             type="number"
             placeholder="Enter Age"
             min={validationRules.personalInfo.age.min}
@@ -282,6 +283,7 @@ function LoanEligibilityForm({
               <Dropdown
                 {...field}
                 label="Employment Status"
+            required={validationRules.personalInfo.employmentStatus.required}
                 options={employmentOptions}
                 error={Boolean(errors.personalInfo?.employmentStatus)}
                 helperText={errors.personalInfo?.employmentStatus?.message}
@@ -290,6 +292,7 @@ function LoanEligibilityForm({
           />
           <Textbox
             label="Employment Duration (months)"
+            required={validationRules.personalInfo.employmentDuration.required}
             type="number"
             placeholder="Enter Employment Duration"
             min={validationRules.personalInfo.employmentDuration.min}
@@ -315,6 +318,7 @@ function LoanEligibilityForm({
         <Box className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
           <Textbox
             label="Monthly Income (ZAR)"
+            required={validationRules.financialInfo.monthlyIncome.required}
             type="number"
             placeholder="Enter Monthly Income"
             min={validationRules.financialInfo.monthlyIncome.min}
@@ -333,6 +337,7 @@ function LoanEligibilityForm({
           />
           <Textbox
             label="Monthly Expenses (ZAR)"
+            required={validationRules.financialInfo.monthlyExpenses.required}
             type="number"
             placeholder="Enter Monthly Expenses"
             min={validationRules.financialInfo.monthlyExpenses.min}
@@ -351,6 +356,7 @@ function LoanEligibilityForm({
           />
           <Textbox
             label="Existing Debt (ZAR)"
+            required={validationRules.financialInfo.existingDebt.required}
             type="number"
             placeholder="Enter Existing Debt"
             min={validationRules.financialInfo.existingDebt.min}
@@ -404,7 +410,9 @@ function LoanEligibilityForm({
                 </Box>
                 <Slider
                   aria-label="Credit score"
-                  aria-describedby="credit-score-helper"
+                  aria-describedby={
+                    errors.financialInfo?.creditScore ? 'credit-score-helper' : undefined
+                  }
                   value={field.value ?? creditScoreMin}
                   min={creditScoreMin}
                   max={creditScoreMax}
@@ -471,10 +479,11 @@ function LoanEligibilityForm({
                   }
                   sx={{ alignSelf: 'flex-start' }}
                 />
-                <FormHelperText id="credit-score-helper" className="mx-0">
-                  {errors.financialInfo?.creditScore?.message ??
-                    `Optional. Set a score between ${creditScoreMin} and ${creditScoreMax}, or leave it out.`}
-                </FormHelperText>
+                {errors.financialInfo?.creditScore && (
+                  <FormHelperText id="credit-score-helper" className="mx-0">
+                    {errors.financialInfo.creditScore.message}
+                  </FormHelperText>
+                )}
               </FormControl>
             )}
           />
@@ -509,6 +518,9 @@ function LoanEligibilityForm({
                   sx={{ color: 'var(--brand-muted)', fontSize: 12, lineHeight: 1.5 }}
                 >
                   Loan Product
+                  {validationRules.loanDetails.loanType.required && (
+                    <span aria-hidden="true"> *</span>
+                  )}
                 </FormLabel>
                 <RadioGroup
                   aria-labelledby="loan-product-label"
@@ -637,6 +649,7 @@ function LoanEligibilityForm({
               <Dropdown
                 className="col-span-2 max-sm:col-span-1"
                 label="Loan Purpose"
+            required={validationRules.loanDetails.loanPurpose.required}
                 options={purposeOptions}
                 {...field}
                 disabled={!selectedProduct}
@@ -649,6 +662,7 @@ function LoanEligibilityForm({
           <Textbox
             className="col-span-1"
             label="Requested Loan Amount (ZAR)"
+            required={validationRules.loanDetails.requestedAmount.required}
             type="number"
             placeholder="Enter Requested Loan Amount"
             disabled={!selectedProduct}
@@ -692,6 +706,7 @@ function LoanEligibilityForm({
             render={({ field }) => (
               <Dropdown
                 label="Loan Term"
+            required={validationRules.loanDetails.loanTerm.required}
                 options={termOptions}
                 disabled={!selectedProduct}
                 value={field.value === undefined ? '' : String(field.value)}
