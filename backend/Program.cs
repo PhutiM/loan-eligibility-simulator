@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
-using LoanEligibility.Api.Cqrs;
 using LoanEligibility.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +23,6 @@ builder.Services.AddControllers()
         };
     });
 builder.Services.AddScoped<ILoanService, LoanService>();
-builder.Services.AddQueryHandlers();
 builder.Services.AddCors();
 
 var app = builder.Build();
