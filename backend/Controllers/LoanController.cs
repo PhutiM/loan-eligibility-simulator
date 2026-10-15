@@ -1,13 +1,14 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using LoanEligibility.Api.Models;
-using LoanEligibility.Api.Services;
+using LoanEligibility.Api.Cqrs;
+using LoanEligibility.Api.Queries;
 
 namespace LoanEligibility.Api.Controllers;
 
 [ApiController]
 [Route("api")]
-public sealed class LoanController(ILoanService loanService) : ControllerBase
+public sealed class LoanController(IQueryDispatcher queries) : ControllerBase
 {
     [HttpGet("health")]
     public IActionResult Health() =>
@@ -25,17 +26,17 @@ public sealed class LoanController(ILoanService loanService) : ControllerBase
     }
 
     [HttpGet("loans/products")]
-    public IActionResult GetProducts() =>
-        Ok(new { products = loanService.GetProducts() });
+    public async Task<IActionResult> GetProducts(CancellationToken cancellationToken) =>
+        Ok(new { products = await queries.QueryAsync(new GetLoanProductsQuery(), cancellationToken) });
 
     [HttpGet("loans/validation-rules")]
-    public IActionResult GetValidationRules() =>
-        Ok(loanService.GetValidationRules());
+    public async Task<IActionResult> GetValidationRules(CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new GetValidationRulesQuery(), cancellationToken));
 
     [HttpPost("loans/eligibility")]
-    public IActionResult CheckEligibility([FromBody] JsonElement body)
+    public async Task<IActionResult> CheckEligibility([FromBody] JsonElement body, CancellationToken cancellationToken)
     {
-        var result = loanService.CheckEligibility(body);
+        var result = await queries.QueryAsync(new CheckEligibilityQuery(body), cancellationToken);
         if (result.Errors.Count > 0)
         {
             return BadRequest(new ValidationErrorResponse("Validation failed", result.Errors));
@@ -45,9 +46,9 @@ public sealed class LoanController(ILoanService loanService) : ControllerBase
     }
 
     [HttpPost("loans/calculate-rate")]
-    public IActionResult CalculateRate([FromBody] JsonElement body)
+    public async Task<IActionResult> CalculateRate([FromBody] JsonElement body, CancellationToken cancellationToken)
     {
-        var result = loanService.CalculateRate(body);
+        var result = await queries.QueryAsync(new CalculateRateQuery(body), cancellationToken);
         if (result.Errors.Count > 0)
         {
             return BadRequest(new ValidationErrorResponse("Validation failed", result.Errors));
