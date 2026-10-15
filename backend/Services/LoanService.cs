@@ -212,7 +212,7 @@ internal sealed class LoanService : ILoanService
             && maxAmount >= product.MinAmount
             && application.RequestedAmount <= maxAmount
             && monthlyDebtRatio <= 55;
-        var riskCategory = creditScore >= 650 && debtToIncomeRatio <= 30
+        var riskCategory = isEligible && creditScore >= 650 && debtToIncomeRatio <= 30
             ? "low"
             : creditScore >= 600 && monthlyDebtRatio <= 55 ? "medium" : "high";
         var affordabilityScore = debtToIncomeRatio <= 30
@@ -232,7 +232,13 @@ internal sealed class LoanService : ILoanService
                 riskCategory,
                 isEligible
                     ? "Strong income-to-expense ratio and manageable existing debt"
-                    : "The application does not meet the income, employment, credit, or affordability criteria"),
+                    : DescribeDeclineReasons(
+                        employed,
+                        creditScore,
+                        maxAmount,
+                        application.RequestedAmount,
+                        monthlyDebtRatio,
+                        product)),
             new RecommendedLoan(
                 maxAmount,
                 isEligible ? application.RequestedAmount : maxAmount,
@@ -243,4 +249,28 @@ internal sealed class LoanService : ILoanService
                 disposableIncome, debtToIncomeRatio, loanToIncomeRatio, affordabilityScore));
     }
 
+    private static string DescribeDeclineReasons(
+        bool employed,
+        double creditScore,
+        double maxAmount,
+        double requestedAmount,
+        double monthlyDebtRatio,
+        LoanProduct product)
+    {
+        var reasons = new List<string>();
+        if (!employed)
+            reasons.Add("employment status must be employed or self-employed");
+        if (creditScore < 600)
+            reasons.Add("credit score is below 600");
+        if (maxAmount < product.MinAmount)
+            reasons.Add($"affordable amount is below the R{FormatNumber(product.MinAmount)} minimum");
+        else if (requestedAmount > maxAmount)
+            reasons.Add($"requested amount exceeds the affordable maximum of R{FormatNumber(maxAmount)}");
+        if (monthlyDebtRatio > 55)
+            reasons.Add("monthly debt payments would exceed 55% of income");
+
+        return reasons.Count == 0
+            ? "The application does not meet the simulator's screening criteria"
+            : $"Not eligible: {string.Join("; ", reasons)}";
+    }
 }
