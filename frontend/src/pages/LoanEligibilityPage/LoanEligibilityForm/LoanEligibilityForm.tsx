@@ -214,7 +214,12 @@ function LoanEligibilityForm({
   const goToNextStep = async () => {
     if (await trigger(stepFields[activeStep])) {
       setActiveStep((currentStep) => Math.min(currentStep + 1, stepTitles.length - 1))
+      onValuesChange?.()
     }
+  }
+  const goToPreviousStep = () => {
+    setActiveStep((currentStep) => currentStep - 1)
+    onValuesChange?.()
   }
 
   return (
@@ -714,7 +719,7 @@ function LoanEligibilityForm({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => setActiveStep((currentStep) => currentStep - 1)}
+            onClick={goToPreviousStep}
             disabled={isSubmitting}
             sx={{ textTransform: 'none' }}
           >
