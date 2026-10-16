@@ -340,6 +340,25 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.getByRole('radiogroup', { name: 'Loan Product' })).toBeInTheDocument()
   })
 
+  it('marks required fields with an asterisk and leaves the credit score unmarked', async () => {
+    const { container } = render(
+      <LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} />,
+    )
+    const asterisks = () => container.querySelectorAll('.MuiFormLabel-asterisk').length
+
+    expect(asterisks()).toBe(3)
+    expect(screen.getByRole('spinbutton', { name: 'Age' })).toBeRequired()
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Age' }), { target: { value: '30' } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment Duration (months)' }), { target: { value: '12' } })
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await screen.findByRole('spinbutton', { name: 'Monthly Income (ZAR)' })
+    expect(asterisks()).toBe(3)
+    expect(screen.queryByText(/Optional\. Set a score/)).not.toBeInTheDocument()
+  })
+
   it('guides the applicant through the steps before showing the eligibility action', async () => {
     render(<LoanEligibilityForm onSubmit={vi.fn()} products={loanProducts} validationRules={validationRules} />)
 

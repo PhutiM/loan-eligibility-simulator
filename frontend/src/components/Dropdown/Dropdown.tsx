@@ -27,6 +27,7 @@ function Dropdown({
   className,
   error = false,
   helperText,
+  required,
   ...props
 }: DropdownProps) {
   const generatedId = useId()
@@ -34,7 +35,7 @@ function Dropdown({
   const labelId = `${selectId}-label`
 
   return (
-    <FormControl className={className} fullWidth size="small" error={error}>
+    <FormControl className={className} fullWidth size="small" error={error} required={required}>
       <FormLabel
         id={labelId}
         htmlFor={selectId}
