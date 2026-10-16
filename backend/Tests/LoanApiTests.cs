@@ -139,6 +139,29 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
+    public async Task Ineligible_application_is_not_low_risk_and_explains_why()
+    {
+        using var response = await _client.PostAsJsonAsync("/api/loans/eligibility", new
+        {
+            personalInfo = new { age = 35, employmentStatus = "unemployed", employmentDuration = 40 },
+            financialInfo = new { monthlyIncome = 80000, monthlyExpenses = 10000, existingDebt = 10000, creditScore = 850 },
+            loanDetails = new
+            {
+                loanType = "vehicle_loan",
+                requestedAmount = 600000,
+                loanTerm = 60,
+                loanPurpose = "new_vehicle"
+            }
+        });
+        var eligibility = (await response.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("eligibilityResult");
+
+        Assert.False(eligibility.GetProperty("isEligible").GetBoolean());
+        Assert.NotEqual("low", eligibility.GetProperty("riskCategory").GetString());
+        Assert.Contains("employment status", eligibility.GetProperty("decisionReason").GetString());
+    }
+
+    [Fact]
     public async Task Invalid_requests_return_field_errors_and_malformed_json_has_legacy_error()
     {
         using var invalidResponse = await _client.PostAsJsonAsync(

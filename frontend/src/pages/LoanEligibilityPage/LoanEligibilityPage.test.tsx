@@ -278,6 +278,39 @@ describe('LoanEligibilityPage', () => {
     expect(await screen.findByText('42/100')).toBeInTheDocument()
   })
 
+  it('clears the previous result when going back to edit a step', async () => {
+    mockFetch({
+      eligibilityResult: {
+        isEligible: true,
+        approvalLikelihood: 85,
+        riskCategory: 'low',
+        decisionReason: 'Manageable debt',
+      },
+      recommendedLoan: {
+        maxAmount: 100000,
+        recommendedAmount: 50000,
+        interestRate: 12,
+        monthlyPayment: 1000,
+        totalRepayment: 60000,
+      },
+      affordabilityAnalysis: {
+        disposableIncome: 10000,
+        debtToIncomeRatio: 20,
+        loanToIncomeRatio: 60,
+        affordabilityScore: 'good',
+      },
+    })
+    render(<LoanEligibilityPage />)
+
+    await enterValidApplication()
+    fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
+    expect(await screen.findByText('85/100')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+
+    expect(screen.queryByText('85/100')).not.toBeInTheDocument()
+  })
+
   it('scrolls results into view on mobile after a successful eligibility check', async () => {
     vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
     const scrollIntoView = vi.fn()

@@ -10,7 +10,7 @@ type TextboxProps = Omit<TextFieldProps, 'id' | 'label' | 'size' | 'variant'> & 
   step?: number | string
 }
 
-function Textbox({ id, label, className, max, min, step, ...props }: TextboxProps) {
+function Textbox({ id, label, className, max, min, step, required, ...props }: TextboxProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId
   const labelId = `${inputId}-label`
@@ -20,6 +20,7 @@ function Textbox({ id, label, className, max, min, step, ...props }: TextboxProp
       <FormLabel
         id={labelId}
         htmlFor={inputId}
+        required={required}
         className="mb-1 block text-xs text-[var(--brand-muted)]"
         sx={{ color: 'var(--brand-muted)', fontSize: 12, lineHeight: 1.5 }}
       >
@@ -31,7 +32,7 @@ function Textbox({ id, label, className, max, min, step, ...props }: TextboxProp
         size="small"
         fullWidth
         slotProps={{
-          htmlInput: { 'aria-labelledby': labelId, max, min, step },
+          htmlInput: { 'aria-labelledby': labelId, 'aria-required': required || undefined, max, min, step },
         }}
         sx={{
           '& .MuiOutlinedInput-root': {
