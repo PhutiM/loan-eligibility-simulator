@@ -60,6 +60,15 @@ public sealed class LoanCalculatorTests
         string employment, decimal income, decimal debt, decimal score, decimal amount) =>
         new(employment, income, income / 2, debt, score, amount, 24, Personal);
 
+    [Theory]
+    [InlineData("retired", true)]
+    [InlineData("unemployed", false)]
+    public void Retired_applicants_with_a_pension_can_qualify_but_unemployed_cannot(string status, bool expected)
+    {
+        var result = LoanCalculator.CalculateEligibility(Application(status, 50000m, 0m, 750m, 50000m));
+        Assert.Equal(expected, result.EligibilityResult.IsEligible);
+    }
+
     [Fact]
     public void Decision_reason_matches_low_risk()
     {

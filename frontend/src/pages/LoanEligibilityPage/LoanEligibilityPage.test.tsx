@@ -277,7 +277,7 @@ describe('LoanEligibilityPage', () => {
     expect(await screen.findByText('42%')).toBeInTheDocument()
   })
 
-  it('clears the previous result when going back to edit a step', async () => {
+  it('keeps the result when navigating back through the steps', async () => {
     mockFetch({
       eligibilityResult: {
         isEligible: true,
@@ -307,7 +307,7 @@ describe('LoanEligibilityPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
 
-    expect(screen.queryByText('85%')).not.toBeInTheDocument()
+    expect(screen.getByText('85%')).toBeInTheDocument()
   })
 
   it('scrolls results into view on mobile after a successful eligibility check', async () => {

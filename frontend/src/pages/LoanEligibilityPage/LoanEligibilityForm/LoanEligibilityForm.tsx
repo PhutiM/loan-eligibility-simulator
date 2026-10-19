@@ -212,12 +212,10 @@ function LoanEligibilityForm({
   const goToNextStep = async () => {
     if (await trigger(stepFields[activeStep])) {
       setActiveStep((currentStep) => Math.min(currentStep + 1, stepTitles.length - 1))
-      onValuesChange?.()
     }
   }
   const goToPreviousStep = () => {
     setActiveStep((currentStep) => currentStep - 1)
-    onValuesChange?.()
   }
 
   return (
@@ -230,7 +228,7 @@ function LoanEligibilityForm({
       onChange={onValuesChange}
     >
       <Box className="rounded-xl border border-[var(--brand-border)] bg-white p-5 max-sm:p-4">
-        <ApplicationStepper steps={stepTitles} activeStep={activeStep}>
+        <ApplicationStepper steps={stepTitles} activeStep={activeStep} onStepSelect={setActiveStep}>
           <Box className="grid content-start gap-5">
             <Typography
               component="p"
