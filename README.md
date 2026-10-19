@@ -2,6 +2,10 @@
 
 React, Vite, TypeScript, React Hook Form, Material UI, and Tailwind CSS frontend with a C# ASP.NET Core backend. The eligibility form validates applicant, financial, and loan details before submitting to the backend and showing the result.
 
+## Live demo
+
+The frontend is deployed to GitHub Pages at <https://phutim.github.io/loan-eligibility-simulator/>. The API runs on Render at <https://loan-eligibility-api-l1ds.onrender.com> (Swagger UI at `/api/docs/index.html`).
+
 ## Requirements
 
 - Node.js 20 or newer
