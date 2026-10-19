@@ -8,7 +8,6 @@ import {
   type SubmitHandler,
 } from 'react-hook-form'
 import Box from '@mui/material/Box'
-import Checkbox from '@mui/material/Checkbox'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import FormHelperText from '@mui/material/FormHelperText'
@@ -147,7 +146,7 @@ function LoanEligibilityForm({
         monthlyIncome: undefined,
         monthlyExpenses: undefined,
         existingDebt: undefined,
-        creditScore: undefined,
+        creditScore: validationRules.financialInfo.creditScore.min ?? 300,
       },
       loanDetails: {
         loanType: '',
@@ -159,7 +158,6 @@ function LoanEligibilityForm({
   })
 
   const [activeStep, setActiveStep] = useState(0)
-  const [isCreditScoreKnown, setIsCreditScoreKnown] = useState(false)
   const selectedLoanType = watch('loanDetails.loanType')
   const selectedProduct = products.find(({ id }) => id === selectedLoanType)
   const creditScoreMin = validationRules.financialInfo.creditScore.min ?? 300
@@ -242,7 +240,7 @@ function LoanEligibilityForm({
               {activeStep === 0 &&
                 'Tell us a little about yourself and your current employment. You can go back to edit any answers.'}
               {activeStep === 1 &&
-                'Enter monthly amounts in rand. Your credit score is optional.'}
+                'Enter monthly amounts in rand and set your credit score.'}
               {activeStep === 2 &&
                 'Choose a loan product to see its available amount and repayment term ranges.'}
             </Typography>
@@ -403,14 +401,14 @@ function LoanEligibilityForm({
                     component="span"
                     sx={{ color: 'var(--brand-muted)', fontSize: 12 }}
                   >
-                    Credit score (optional)
+                    Credit score
                   </FormLabel>
                   <Typography
                     component="span"
                     className="text-[var(--brand-navy)]"
                     sx={{ fontSize: 13, fontWeight: 700 }}
                   >
-                    {field.value ?? 'Not provided'}
+                    {field.value ?? creditScoreMin}
                   </Typography>
                 </Box>
                 <Slider
@@ -422,8 +420,7 @@ function LoanEligibilityForm({
                   min={creditScoreMin}
                   max={creditScoreMax}
                   step={1}
-                  disabled={!isCreditScoreKnown}
-                  valueLabelDisplay={isCreditScoreKnown ? 'auto' : 'off'}
+                  valueLabelDisplay="auto"
                   getAriaValueText={(value) => `Credit score ${value}`}
                   onChange={(_, value) => {
                     if (typeof value === 'number') {
@@ -442,10 +439,6 @@ function LoanEligibilityForm({
                     },
                     '& .MuiSlider-rail': { opacity: 1, bgcolor: '#a8d3ff' },
                     '& .MuiSlider-track': { border: 0 },
-                    '&.Mui-disabled': {
-                      color: '#a8d3ff',
-                      '& .MuiSlider-rail': { bgcolor: '#dceeff' },
-                    },
                   }}
                 />
                 <Box className="flex justify-between text-[#617782]">
@@ -456,34 +449,6 @@ function LoanEligibilityForm({
                     {creditScoreMax}
                   </Typography>
                 </Box>
-                <FormControlLabel
-                  className="m-0"
-                  control={
-                    <Checkbox
-                      checked={isCreditScoreKnown}
-                      onChange={(event) => {
-                        const known = event.target.checked
-                        setIsCreditScoreKnown(known)
-                        field.onChange(known ? (field.value ?? creditScoreMin) : undefined)
-                      }}
-                      size="small"
-                      sx={{
-                        color: 'var(--brand-navy)',
-                        '&.Mui-checked': { color: 'var(--brand-navy)' },
-                      }}
-                    />
-                  }
-                  label={
-                    <Typography
-                      component="span"
-                      className="text-[var(--brand-muted)]"
-                      sx={{ fontSize: 12 }}
-                    >
-                      I know my credit score
-                    </Typography>
-                  }
-                  sx={{ alignSelf: 'flex-start' }}
-                />
                 {errors.financialInfo?.creditScore && (
                   <FormHelperText id="credit-score-helper" className="mx-0">
                     {errors.financialInfo.creditScore.message}

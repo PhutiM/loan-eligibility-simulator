@@ -108,7 +108,7 @@ paths:
               financialInfo:
                 monthlyIncome: 25000
                 monthlyExpenses: 15000
-                existingDebt: 5000
+                existingDebt: 50000
                 creditScore: 650
               loanDetails:
                 loanType: personal_loan
@@ -127,7 +127,7 @@ paths:
                   isEligible: true
                   approvalLikelihood: 85
                   riskCategory: low
-                  decisionReason: Strong income-to-expense ratio and manageable existing debt
+                  decisionReason: 'Low risk: your income comfortably covers your expenses and existing debt, and your credit score is strong, so this loan looks affordable'
                 recommendedLoan:
                   maxAmount: 180000
                   recommendedAmount: 150000
@@ -136,7 +136,7 @@ paths:
                   totalRepayment: 170306.3
                 affordabilityAnalysis:
                   disposableIncome: 10000
-                  debtToIncomeRatio: 20
+                  debtToIncomeRatio: 6
                   loanToIncomeRatio: 60
                   affordabilityScore: good
         '400':
@@ -270,7 +270,7 @@ components:
             existingDebt:
               type: number
               minimum: 0
-              description: Existing monthly debt obligations
+              description: Total outstanding debt balance. About 3% of it is assumed to be repaid each month when assessing affordability
             creditScore:
               type: integer
               minimum: 300

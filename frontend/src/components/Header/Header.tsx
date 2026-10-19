@@ -64,7 +64,7 @@ function Header() {
             variant="body2"
             className="text-xs text-[var(--brand-muted)] max-sm:hidden"
           >
-            Know your options. Plan your tomorrow.
+            Plan your tomorrow.
           </Typography>
         </Box>
       </Toolbar>

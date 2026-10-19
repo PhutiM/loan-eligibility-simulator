@@ -180,9 +180,9 @@ function LoanEligibilityPage() {
                 className="mt-2 text-[var(--brand-muted)] max-md:mt-1"
                 sx={{ fontSize: { xs: 11, md: 12 }, lineHeight: { xs: 1.5, md: 1.65 } }}
               >
-                This rules-based simulator is not a loan offer, lender decision,
-                or probability of approval. Its score reflects the information
-                entered, while actual eligibility depends on credit history,
+                This simulator is not a loan offer or a lender decision. The
+                approval chance is an estimate based on the information you
+                entered. Actual eligibility depends on your credit history,
                 verified income, lender affordability rules, fees and other
                 criteria.
               </Typography>
