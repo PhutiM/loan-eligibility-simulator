@@ -4,7 +4,7 @@ React, Vite, TypeScript, React Hook Form, Material UI, and Tailwind CSS frontend
 
 ## Live demo
 
-The frontend is deployed to GitHub Pages at <https://phutim.github.io/loan-eligibility-simulator/>. The API runs on Render at <https://loan-eligibility-api-l1ds.onrender.com> (Swagger UI at `/api/docs/index.html`).
+The frontend is deployed to GitHub Pages at <https://phutim.github.io/loan-eligibility-simulator/>. The API runs on Render at <https://loan-eligibility-api-l1ds.onrender.com>, with Swagger docs at <https://loan-eligibility-api-l1ds.onrender.com/api/docs/index.html>.
 
 ## Requirements
 
