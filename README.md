@@ -25,7 +25,7 @@ The repository includes a production backend image in `Dockerfile.backend` and a
 docker compose up --build
 ```
 
-Open <http://localhost:8080>. Compose builds and starts both images; Nginx serves the production Vite build and proxies `/api` requests (including Swagger UI at `/api/docs`) to the backend container. The backend is reachable only within the Compose network. Stop the containers with `docker compose down`.
+Open <http://localhost:8080>. Compose builds and starts both images; Nginx serves the production Vite build and proxies `/api` requests (including Swagger UI at `/api/docs/index.html`) to the backend container. The backend is reachable only within the Compose network. Stop the containers with `docker compose down`.
 
 To build and run only the backend image:
 
@@ -34,7 +34,7 @@ docker build --file Dockerfile.backend --tag loan-eligibility-api .
 docker run --rm --publish 3000:3000 loan-eligibility-api
 ```
 
-The API health check is available at <http://localhost:3000/api/health>; Swagger UI is at <http://localhost:3000/api/docs>. The backend container runs as a non-root user.
+The API health check is available at <http://localhost:3000/api/health>; Swagger UI is at <http://localhost:3000/api/docs/index.html>. The backend container runs as a non-root user.
 
 ## Available commands
 
@@ -46,7 +46,7 @@ The API health check is available at <http://localhost:3000/api/health>; Swagger
 - `dotnet test backend/Tests/LoanEligibility.Api.Tests.csproj` — test the backend API
 - `dotnet run --project backend/LoanEligibility.Api.csproj` — start the backend
 
-Swagger UI is available at <http://localhost:3000/api/docs>, and the OpenAPI document is served at <http://localhost:3000/api/openapi.yaml>. The OpenAPI document uses a relative server URL so Swagger's "Try it out" sends requests to the same host serving the documentation, including on Render.
+Swagger UI is available at <http://localhost:3000/api/docs/index.html> (the URL is also logged when the backend starts), and the OpenAPI document is served at <http://localhost:3000/api/openapi.yaml>. The OpenAPI document uses a relative server URL so Swagger's "Try it out" sends requests to the same host serving the documentation, including on Render.
 
 ## Loan API
 

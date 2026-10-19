@@ -58,6 +58,9 @@ app.UseSwaggerUI(options =>
 });
 app.MapControllers();
 
+app.Lifetime.ApplicationStarted.Register(() =>
+    app.Logger.LogInformation("Swagger docs available at http://localhost:{Port}/api/docs/index.html", port));
+
 app.Run();
 
 public partial class Program { }
