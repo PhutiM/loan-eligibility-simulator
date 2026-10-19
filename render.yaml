@@ -5,6 +5,13 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile.backend
     dockerContext: .
+    branch: main
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/**
+        - Dockerfile.backend
+        - render.yaml
     healthCheckPath: /api/health
     envVars:
       - key: FRONTEND_ORIGIN
