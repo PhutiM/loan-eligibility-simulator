@@ -109,7 +109,6 @@ async function enterValidApplication() {
       target: { value },
     })
   }
-  fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
   fireEvent.keyDown(screen.getByRole('slider', { name: 'Credit score' }), { key: 'End' })
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
   await screen.findByRole('radio', { name: 'Personal Loan' })
@@ -209,9 +208,9 @@ describe('LoanEligibilityPage', () => {
     }),
     )
     expect(
-      await screen.findByRole('heading', { name: 'Positive simulator result' }),
+      await screen.findByRole('heading', { name: 'Good news, you look likely to qualify' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('85/100')).toBeInTheDocument()
+    expect(screen.getByText('85%')).toBeInTheDocument()
     expect(
       await screen.findByRole('heading', { name: 'Loan recommendation details' }),
     ).toBeInTheDocument()
@@ -220,8 +219,8 @@ describe('LoanEligibilityPage', () => {
     expect(screen.getByRole('heading', { name: 'Affordability Analysis' })).toBeInTheDocument()
     expect(screen.getByText('Risk Category')).toBeInTheDocument()
     expect(screen.getByText('Decision Reason')).toBeInTheDocument()
-    expect(screen.getByText('Simulator score')).toBeInTheDocument()
-    expect(screen.getByText(/not a probability of approval or a lender decision/)).toBeInTheDocument()
+    expect(screen.getByText('Approval chance')).toBeInTheDocument()
+    expect(screen.getByText(/not a guarantee. The final decision is made by the lender/)).toBeInTheDocument()
     expect(screen.getByText('Debt to Income Ratio')).toBeInTheDocument()
     expect(screen.getByText('Affordability Score')).toBeInTheDocument()
     expect(screen.getByText(/7,096\.10/)).toBeInTheDocument()
@@ -264,18 +263,18 @@ describe('LoanEligibilityPage', () => {
 
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
-    expect(await screen.findByText('85/100')).toBeInTheDocument()
+    expect(await screen.findByText('85%')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
-    fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Credit score' }), { key: 'Home' })
 
-    expect(screen.queryByText('85/100')).not.toBeInTheDocument()
+    expect(screen.queryByText('85%')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ready to get started?' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('radio', { name: 'Personal Loan' })
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
-    expect(await screen.findByText('42/100')).toBeInTheDocument()
+    expect(await screen.findByText('42%')).toBeInTheDocument()
   })
 
   it('clears the previous result when going back to edit a step', async () => {
@@ -304,11 +303,11 @@ describe('LoanEligibilityPage', () => {
 
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
-    expect(await screen.findByText('85/100')).toBeInTheDocument()
+    expect(await screen.findByText('85%')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
 
-    expect(screen.queryByText('85/100')).not.toBeInTheDocument()
+    expect(screen.queryByText('85%')).not.toBeInTheDocument()
   })
 
   it('scrolls results into view on mobile after a successful eligibility check', async () => {
@@ -344,7 +343,7 @@ describe('LoanEligibilityPage', () => {
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
 
-    await screen.findByRole('heading', { name: 'Further review recommended' })
+    await screen.findByRole('heading', { name: 'You may not qualify yet' })
     await waitFor(() =>
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' }),
     )
@@ -485,7 +484,7 @@ describe('LoanEligibilityPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Check Eligibility' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'Further review recommended' }),
+      await screen.findByRole('heading', { name: 'You may not qualify yet' }),
     ).toBeInTheDocument()
   })
 })

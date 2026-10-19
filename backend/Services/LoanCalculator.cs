@@ -70,7 +70,8 @@ public static class LoanCalculator
         var product = application.Product;
         var creditScore = application.CreditScore ?? LoanPolicy.DefaultCreditScore;
         var disposableIncome = RoundMoney(application.MonthlyIncome - application.MonthlyExpenses);
-        var debtToIncomeRatio = RoundMoney(application.ExistingDebt / application.MonthlyIncome * 100m);
+        var existingMonthlyDebt = application.ExistingDebt * LoanPolicy.AssumedMonthlyRepaymentRate;
+        var debtToIncomeRatio = RoundMoney(existingMonthlyDebt / application.MonthlyIncome * 100m);
         var maxAmount = RoundMoney(Math.Min(
             product.MaxAmount,
             Math.Max(0m, disposableIncome * LoanPolicy.DisposableIncomeMultiplier)));
@@ -78,7 +79,7 @@ public static class LoanCalculator
         var interestRate = GetRate(creditScore, product);
         var repayment = CalculateRepayment(application.RequestedAmount, application.LoanTerm, interestRate);
         var monthlyDebtRatio =
-            (application.ExistingDebt + repayment.MonthlyPayment) / application.MonthlyIncome * 100m;
+            (existingMonthlyDebt + repayment.MonthlyPayment) / application.MonthlyIncome * 100m;
         var employed = application.EmploymentStatus is "employed" or "self_employed";
         var isEligible = employed
             && creditScore >= LoanPolicy.MinEligibleCreditScore
@@ -106,15 +107,15 @@ public static class LoanCalculator
                 isEligible,
                 likelihood,
                 riskCategory,
-                isEligible
-                    ? "Strong income-to-expense ratio and manageable existing debt"
-                    : DescribeDeclineReasons(
-                        employed,
-                        creditScore,
-                        maxAmount,
-                        application.RequestedAmount,
-                        monthlyDebtRatio,
-                        product)),
+                DescribeDecision(
+                    isEligible,
+                    riskCategory,
+                    employed,
+                    creditScore,
+                    maxAmount,
+                    application.RequestedAmount,
+                    monthlyDebtRatio,
+                    product)),
             new RecommendedLoan(
                 maxAmount,
                 isEligible ? application.RequestedAmount : maxAmount,
@@ -125,7 +126,9 @@ public static class LoanCalculator
                 disposableIncome, debtToIncomeRatio, loanToIncomeRatio, affordabilityScore));
     }
 
-    private static string DescribeDeclineReasons(
+    private static string DescribeDecision(
+        bool isEligible,
+        string riskCategory,
         bool employed,
         decimal creditScore,
         decimal maxAmount,
@@ -133,21 +136,31 @@ public static class LoanCalculator
         decimal monthlyDebtRatio,
         LoanProduct product)
     {
+        if (isEligible)
+        {
+            return riskCategory == "low"
+                ? "Low risk: your income comfortably covers your expenses and existing debt, and your credit score is strong, so this loan looks affordable"
+                : "Moderate income-to-expense ratio and manageable existing debt";
+        }
+
         var reasons = new List<string>();
         if (!employed)
-            reasons.Add("employment status must be employed or self-employed");
+            reasons.Add("you need to be employed or self-employed");
         if (creditScore < LoanPolicy.MinEligibleCreditScore)
-            reasons.Add($"credit score is below {LoanPolicy.MinEligibleCreditScore}");
+            reasons.Add($"your credit score is below {LoanPolicy.MinEligibleCreditScore}");
         if (maxAmount < product.MinAmount)
-            reasons.Add($"affordable amount is below the R{Format(product.MinAmount)} minimum");
+            reasons.Add($"based on your income and expenses, you can afford less than the R{Format(product.MinAmount)} minimum for this loan");
         else if (requestedAmount > maxAmount)
-            reasons.Add($"requested amount exceeds the affordable maximum of R{Format(maxAmount)}");
+            reasons.Add($"the amount you asked for is more than you can afford (up to R{Format(maxAmount)})");
         if (monthlyDebtRatio > LoanPolicy.MaxMonthlyDebtRatio)
-            reasons.Add($"monthly debt payments would exceed {LoanPolicy.MaxMonthlyDebtRatio:0}% of income");
+            reasons.Add($"your monthly debt payments would take up more than {LoanPolicy.MaxMonthlyDebtRatio:0}% of your income");
 
+        var lead = riskCategory == "high"
+            ? "High risk, you may not qualify yet"
+            : "Medium risk, you are close but may not qualify yet";
         return reasons.Count == 0
-            ? "The application does not meet the simulator's screening criteria"
-            : $"Not eligible: {string.Join("; ", reasons)}";
+            ? $"{lead}: your application does not meet our requirements right now"
+            : $"{lead}: {string.Join("; ", reasons)}.";
     }
 
     private static string Format(decimal number) =>

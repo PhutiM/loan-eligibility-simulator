@@ -13,17 +13,17 @@ function EligibilityResult({
 }: EligibilityResultProps) {
   const score = Math.max(0, Math.min(100, Math.round(approvalLikelihood)))
   const title = isEligible
-    ? 'Positive simulator result'
-    : 'Further review recommended'
+    ? 'Good news, you look likely to qualify'
+    : "You may not qualify yet"
   const description = isEligible
-    ? "Your details meet the simulator's current screening criteria."
-    : "Your details don't meet the simulator's current screening criteria."
+    ? 'Based on the details you shared, you meet our simulator\'s requirements.'
+    : 'Based on the details you shared, you don\'t meet all of our simulator\'s requirements yet. See below for why.'
 
   return (
     <>
     <Box
       role="status"
-      aria-label={`${title}. Simulator score: ${score} out of 100.`}
+      aria-label={`${title}. Estimated approval chance: ${score}%.`}
       className={`flex items-center justify-between gap-5 rounded-xl border px-5 py-4 max-sm:gap-3 max-sm:px-4 ${
         isEligible
           ? 'border-emerald-200 bg-emerald-50'
@@ -81,7 +81,7 @@ function EligibilityResult({
               className="text-[var(--brand-navy)]"
               sx={{ fontSize: 13, fontWeight: 750 }}
             >
-              {score}/100
+              {score}%
             </Typography>
           </Box>
         </Box>
@@ -90,7 +90,7 @@ function EligibilityResult({
           className={isEligible ? 'text-emerald-700' : 'text-red-700'}
           sx={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}
         >
-          Simulator score
+          Approval chance
         </Typography>
       </Box>
     </Box>
@@ -99,8 +99,8 @@ function EligibilityResult({
       className="mt-1 text-[var(--brand-muted)]"
       sx={{ fontSize: 11, lineHeight: 1.5 }}
     >
-      The simulator score is a rules-based estimate, not a probability of approval
-      or a lender decision.
+      This percentage is an estimate from simple rules, not a guarantee. The
+      final decision is made by the lender.
     </Typography>
     </>
   )

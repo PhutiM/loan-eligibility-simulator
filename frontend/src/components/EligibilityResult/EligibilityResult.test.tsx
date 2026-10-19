@@ -8,11 +8,11 @@ describe('EligibilityResult', () => {
   it('shows an eligibility estimate and clearly labels its simulator score', () => {
     render(<EligibilityResult isEligible approvalLikelihood={85} />)
 
-    expect(screen.getByRole('heading', { name: 'Positive simulator result' })).toBeInTheDocument()
-    expect(screen.getByText('85/100')).toBeInTheDocument()
-    expect(screen.getByText('Simulator score')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Good news, you look likely to qualify' })).toBeInTheDocument()
+    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText('Approval chance')).toBeInTheDocument()
     expect(
-      screen.getByText(/not a probability of approval or a lender decision/),
+      screen.getByText(/not a guarantee. The final decision is made by the lender/),
     ).toBeInTheDocument()
   })
 
@@ -20,20 +20,20 @@ describe('EligibilityResult', () => {
     render(<EligibilityResult isEligible={false} approvalLikelihood={15} />)
 
     expect(
-      screen.getByRole('heading', { name: 'Further review recommended' }),
+      screen.getByRole('heading', { name: 'You may not qualify yet' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Your details don't meet the simulator's current screening criteria."),
+      screen.getByText("Based on the details you shared, you don't meet all of our simulator's requirements yet. See below for why."),
     ).toBeInTheDocument()
   })
 
   it('clamps the simulator score to its displayed range', () => {
     render(<EligibilityResult isEligible approvalLikelihood={120} />)
 
-    expect(screen.getByText('100/100')).toBeInTheDocument()
+    expect(screen.getByText('100%')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveAttribute(
       'aria-label',
-      'Positive simulator result. Simulator score: 100 out of 100.',
+      'Good news, you look likely to qualify. Estimated approval chance: 100%.',
     )
   })
 })

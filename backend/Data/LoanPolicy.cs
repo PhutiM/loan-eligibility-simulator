@@ -16,6 +16,8 @@ public static class LoanPolicy
 
     public const int MinEligibleCreditScore = 600;
     public const int LowRiskCreditScore = 650;
+    // Existing debt is a total balance; this share of it is assumed to be repaid each month.
+    public const decimal AssumedMonthlyRepaymentRate = 0.03m;
     public const decimal MaxMonthlyDebtRatio = 55m;
     public const decimal LowRiskDebtToIncome = 30m;
     public const decimal FairDebtToIncome = 45m;

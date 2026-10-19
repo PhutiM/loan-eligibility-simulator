@@ -75,13 +75,11 @@ async function enterFinancialDetails() {
       target: { value },
     })
   }
-  const disabledCreditScoreSlider = screen.getByRole('slider', { name: 'Credit score' })
-  expect(disabledCreditScoreSlider).toBeDisabled()
-  expect(disabledCreditScoreSlider).toHaveAttribute('aria-valuemin', '300')
-  expect(disabledCreditScoreSlider).toHaveAttribute('aria-valuemax', '850')
-  fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
+  expect(screen.queryByRole('checkbox', { name: 'I know my credit score' })).not.toBeInTheDocument()
   const creditScoreSlider = screen.getByRole('slider', { name: 'Credit score' })
   expect(creditScoreSlider).toBeEnabled()
+  expect(creditScoreSlider).toHaveAttribute('aria-valuemin', '300')
+  expect(creditScoreSlider).toHaveAttribute('aria-valuemax', '850')
   fireEvent.keyDown(creditScoreSlider, { key: 'End' })
   expect(creditScoreSlider).toHaveAttribute('aria-valuenow', '850')
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
@@ -237,14 +235,13 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.queryByText('Please select a loan purpose')).not.toBeInTheDocument()
   })
 
-  it('allows the optional credit score to be left blank', async () => {
+  it('always enables the credit score slider and submits its value', async () => {
     const onSubmit = vi.fn()
     render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
 
     await enterValidApplication()
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
-    fireEvent.click(screen.getByRole('checkbox', { name: 'I know my credit score' }))
-    expect(screen.getByRole('slider', { name: 'Credit score' })).toBeDisabled()
+    expect(screen.getByRole('slider', { name: 'Credit score' })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('radio', { name: 'Personal Loan' })
     fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
@@ -252,7 +249,7 @@ describe('Loan Eligibility Page Form', () => {
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          financialInfo: expect.objectContaining({ creditScore: undefined }),
+          financialInfo: expect.objectContaining({ creditScore: 850 }),
         }),
       ),
     )

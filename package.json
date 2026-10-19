@@ -5,6 +5,7 @@
     "frontend"
   ],
   "scripts": {
+    "start": "npm install && npm run dev",
     "dev": "concurrently -k -n frontend,backend -c cyan,green \"npm run dev --workspace frontend\" \"dotnet watch --project backend/LoanEligibility.Api.csproj\"",
     "build": "npm run build --workspace frontend",
     "lint": "npm run lint --workspace frontend"

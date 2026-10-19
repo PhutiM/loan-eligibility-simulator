@@ -38,7 +38,8 @@ The API health check is available at <http://localhost:3000/api/health>; Swagger
 
 ## Available commands
 
-- `npm run dev` — start the frontend and backend together
+- `npm start` — install dependencies, then start the frontend and backend together
+- `npm run dev` — start the frontend and backend together (dependencies must already be installed)
 - `npm run build` — type-check and build the frontend
 - `npm run lint` — lint the frontend
 - `npm run test:coverage --workspace frontend` — run frontend tests and enforce 80% statement, branch, function, and line coverage
