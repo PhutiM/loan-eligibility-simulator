@@ -253,6 +253,7 @@ components:
             employmentStatus:
               type: string
               enum: [employed, self_employed, unemployed, retired]
+              description: Employed, self-employed and retired applicants are treated as having a regular income; unemployed applicants are declined
             employmentDuration:
               type: integer
               minimum: 3

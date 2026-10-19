@@ -5,10 +5,11 @@ import type { ReactNode } from 'react'
 type ApplicationStepperProps = {
   steps: string[]
   activeStep: number
+  onStepSelect?: (index: number) => void
   children: ReactNode
 }
 
-function ApplicationStepper({ steps, activeStep, children }: ApplicationStepperProps) {
+function ApplicationStepper({ steps, activeStep, onStepSelect, children }: ApplicationStepperProps) {
   return (
     <Box component="nav" aria-label="Application progress">
       <Box component="ol" className="m-0 flex list-none flex-col p-0">
@@ -42,8 +43,16 @@ function ApplicationStepper({ steps, activeStep, children }: ApplicationStepperP
                   />
                 )}
                 <Box
-                  aria-hidden="true"
+                  component={isCompleted && onStepSelect ? 'button' : 'div'}
+                  type={isCompleted && onStepSelect ? 'button' : undefined}
+                  onClick={isCompleted && onStepSelect ? () => onStepSelect(index) : undefined}
+                  aria-label={
+                    isCompleted && onStepSelect ? `Go back to ${step}` : undefined
+                  }
+                  aria-hidden={isCompleted && onStepSelect ? undefined : 'true'}
                   className={`relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full ${
+                    isCompleted && onStepSelect ? 'cursor-pointer border-0 hover:bg-emerald-700' : ''
+                  } ${
                     isCompleted
                       ? 'bg-emerald-600 text-white'
                       : isActive

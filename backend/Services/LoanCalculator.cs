@@ -80,8 +80,8 @@ public static class LoanCalculator
         var repayment = CalculateRepayment(application.RequestedAmount, application.LoanTerm, interestRate);
         var monthlyDebtRatio =
             (existingMonthlyDebt + repayment.MonthlyPayment) / application.MonthlyIncome * 100m;
-        var employed = application.EmploymentStatus is "employed" or "self_employed";
-        var isEligible = employed
+        var hasRegularIncome = application.EmploymentStatus is "employed" or "self_employed" or "retired";
+        var isEligible = hasRegularIncome
             && creditScore >= LoanPolicy.MinEligibleCreditScore
             && maxAmount >= product.MinAmount
             && application.RequestedAmount <= maxAmount
@@ -98,7 +98,7 @@ public static class LoanCalculator
         var likelihood = Math.Max(5, Math.Min(95, (int)Math.Floor(
             80m + (creditScore - 650m) * 0.1m
             - Math.Max(0m, debtToIncomeRatio - 20m) * 0.5m
-            + (employed ? 5m : -20m) + 0.5m)));
+            + (hasRegularIncome ? 5m : -20m) + 0.5m)));
         if (!isEligible)
             likelihood = Math.Min(likelihood, LoanPolicy.IneligibleLikelihoodCap);
 
@@ -110,7 +110,7 @@ public static class LoanCalculator
                 DescribeDecision(
                     isEligible,
                     riskCategory,
-                    employed,
+                    hasRegularIncome,
                     creditScore,
                     maxAmount,
                     application.RequestedAmount,
@@ -129,7 +129,7 @@ public static class LoanCalculator
     private static string DescribeDecision(
         bool isEligible,
         string riskCategory,
-        bool employed,
+        bool hasRegularIncome,
         decimal creditScore,
         decimal maxAmount,
         decimal requestedAmount,
@@ -144,8 +144,8 @@ public static class LoanCalculator
         }
 
         var reasons = new List<string>();
-        if (!employed)
-            reasons.Add("you need to be employed or self-employed");
+        if (!hasRegularIncome)
+            reasons.Add("you need a regular income (employed, self-employed or retired with a pension)");
         if (creditScore < LoanPolicy.MinEligibleCreditScore)
             reasons.Add($"your credit score is below {LoanPolicy.MinEligibleCreditScore}");
         if (maxAmount < product.MinAmount)

@@ -158,7 +158,7 @@ public sealed class LoanApiTests(WebApplicationFactory<Program> factory)
 
         Assert.False(eligibility.GetProperty("isEligible").GetBoolean());
         Assert.NotEqual("low", eligibility.GetProperty("riskCategory").GetString());
-        Assert.Contains("employed or self-employed", eligibility.GetProperty("decisionReason").GetString());
+        Assert.Contains("regular income", eligibility.GetProperty("decisionReason").GetString());
     }
 
     [Fact]
