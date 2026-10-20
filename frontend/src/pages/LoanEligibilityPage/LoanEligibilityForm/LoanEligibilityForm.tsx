@@ -14,12 +14,12 @@ import FormHelperText from '@mui/material/FormHelperText'
 import FormLabel from '@mui/material/FormLabel'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
-import Slider from '@mui/material/Slider'
 import SvgIcon from '@mui/material/SvgIcon'
 import Typography from '@mui/material/Typography'
 import ApplicationStepper from '../../../components/ApplicationStepper/ApplicationStepper'
 import Button from '../../../components/Button/Button'
 import Dropdown from '../../../components/Dropdown/Dropdown'
+import LabeledSlider from '../../../components/LabeledSlider/LabeledSlider'
 import Textbox from '../../../components/Textbox/Textbox'
 import type { LoanProduct, ValidationRules } from '../../../api/loans'
 
@@ -291,26 +291,66 @@ function LoanEligibilityForm({
               />
             )}
           />
-          <Textbox
-            label="Employment Duration (months)"
-            required={validationRules.personalInfo.employmentDuration.required}
-            type="number"
-            placeholder="Enter Employment Duration"
-            min={validationRules.personalInfo.employmentDuration.min}
-            error={Boolean(errors.personalInfo?.employmentDuration)}
-            helperText={errors.personalInfo?.employmentDuration?.message}
-            {...register('personalInfo.employmentDuration', {
-              valueAsNumber: true,
-              required: validationRules.personalInfo.employmentDuration.required
-                ? validationRules.personalInfo.employmentDuration.errorMessage
-                : false,
+          <Controller
+            name="personalInfo.employmentDuration"
+            control={control}
+            rules={{
               validate: (value) =>
                 (validationRules.personalInfo.employmentDuration.min === undefined ||
                   value >= validationRules.personalInfo.employmentDuration.min) &&
                 (!validationRules.personalInfo.employmentDuration.integer ||
                   Number.isInteger(value)) ||
                 validationRules.personalInfo.employmentDuration.errorMessage,
-            })}
+            }}
+            render={({ field }) => {
+              const totalMonths = field.value
+              const years = totalMonths === undefined ? '' : Math.floor(totalMonths / 12)
+              const months = totalMonths === undefined ? '' : totalMonths % 12
+              const updateDuration = (nextYears: number, nextMonths: number) => {
+                field.onChange(nextYears * 12 + nextMonths)
+                onValuesChange?.()
+              }
+              const toWhole = (text: string, max: number) =>
+                Math.min(max, Math.max(0, Math.floor(Number(text) || 0)))
+
+              return (
+                <Box className="col-span-2 grid gap-1 max-sm:col-span-1">
+                  <Box className="grid grid-cols-2 gap-3">
+                    <Textbox
+                      label="Employment duration (years)"
+                      required={validationRules.personalInfo.employmentDuration.required}
+                      type="number"
+                      placeholder="0"
+                      min={0}
+                      value={years}
+                      error={Boolean(errors.personalInfo?.employmentDuration)}
+                      onChange={(event) =>
+                        updateDuration(toWhole(event.target.value, 60), Number(months) || 0)
+                      }
+                    />
+                    <Textbox
+                      label="Employment duration (months)"
+                      type="number"
+                      placeholder="0"
+                      min={0}
+                      max={11}
+                      value={months}
+                      error={Boolean(errors.personalInfo?.employmentDuration)}
+                      onChange={(event) =>
+                        updateDuration(Number(years) || 0, toWhole(event.target.value, 11))
+                      }
+                    />
+                  </Box>
+                  <FormHelperText
+                    error={Boolean(errors.personalInfo?.employmentDuration)}
+                    className="mx-0"
+                  >
+                    {errors.personalInfo?.employmentDuration?.message ??
+                      'Example: 2 years and 6 months'}
+                  </FormHelperText>
+                </Box>
+              )
+            }}
           />
         </Box>
       </FormSection>}
@@ -389,70 +429,18 @@ function LoanEligibilityForm({
                 validationRules.financialInfo.creditScore.errorMessage,
             }}
             render={({ field }) => (
-              <FormControl
-                error={Boolean(errors.financialInfo?.creditScore)}
+              <LabeledSlider
+                label="Credit score"
                 className="col-span-2 max-sm:col-span-1"
-              >
-                <Box className="flex items-center justify-between gap-2">
-                  <FormLabel
-                    id="credit-score-label"
-                    component="span"
-                    sx={{ color: 'var(--brand-muted)', fontSize: 12 }}
-                  >
-                    Credit score
-                  </FormLabel>
-                  <Typography
-                    component="span"
-                    className="text-[var(--brand-navy)]"
-                    sx={{ fontSize: 13, fontWeight: 700 }}
-                  >
-                    {field.value ?? creditScoreMin}
-                  </Typography>
-                </Box>
-                <Slider
-                  aria-label="Credit score"
-                  aria-describedby={
-                    errors.financialInfo?.creditScore ? 'credit-score-helper' : undefined
-                  }
-                  value={field.value ?? creditScoreMin}
-                  min={creditScoreMin}
-                  max={creditScoreMax}
-                  step={1}
-                  valueLabelDisplay="auto"
-                  getAriaValueText={(value) => `Credit score ${value}`}
-                  onChange={(_, value) => {
-                    if (typeof value === 'number') {
-                      field.onChange(value)
-                      onValuesChange?.()
-                    }
-                  }}
-                  sx={{
-                    mt: 1,
-                    color: '#1976d2',
-                    '& .MuiSlider-thumb': {
-                      width: 18,
-                      height: 18,
-                      border: '2px solid white',
-                      boxShadow: '0 0 0 2px #1976d2',
-                    },
-                    '& .MuiSlider-rail': { opacity: 1, bgcolor: '#a8d3ff' },
-                    '& .MuiSlider-track': { border: 0 },
-                  }}
-                />
-                <Box className="flex justify-between text-[#617782]">
-                  <Typography component="span" sx={{ fontSize: 10 }}>
-                    {creditScoreMin}
-                  </Typography>
-                  <Typography component="span" sx={{ fontSize: 10 }}>
-                    {creditScoreMax}
-                  </Typography>
-                </Box>
-                {errors.financialInfo?.creditScore && (
-                  <FormHelperText id="credit-score-helper" className="mx-0">
-                    {errors.financialInfo.creditScore.message}
-                  </FormHelperText>
-                )}
-              </FormControl>
+                value={field.value ?? creditScoreMin}
+                min={creditScoreMin}
+                max={creditScoreMax}
+                errorMessage={errors.financialInfo?.creditScore?.message}
+                onChange={(value) => {
+                  field.onChange(value)
+                  onValuesChange?.()
+                }}
+              />
             )}
           />
         </Box>
@@ -487,7 +475,7 @@ function LoanEligibilityForm({
                 >
                   Loan Product
                   {validationRules.loanDetails.loanType.required && (
-                    <span aria-hidden="true"> *</span>
+                    <span aria-hidden="true" className="MuiFormLabel-asterisk"> *</span>
                   )}
                 </FormLabel>
                 <RadioGroup

@@ -48,16 +48,24 @@ const validationRules: ValidationRules = {
   },
 }
 
+async function enterPersonalDetailsExceptDuration() {
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Age' }), { target: { value: '35' } })
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+  await screen.findByRole('spinbutton', { name: 'Monthly Income (ZAR)' })
+}
+
 async function enterPersonalDetails() {
   const personalValues = [
     ['Age', '35'],
-    ['Employment Duration (months)', '24'],
   ] as const
   for (const [label, value] of personalValues) {
     fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
       target: { value },
     })
   }
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment duration (years)' }), { target: { value: '2' } })
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
   fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
@@ -347,13 +355,40 @@ describe('Loan Eligibility Page Form', () => {
     expect(screen.getByRole('spinbutton', { name: 'Age' })).toBeRequired()
 
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Age' }), { target: { value: '30' } })
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment Duration (months)' }), { target: { value: '12' } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment duration (years)' }), { target: { value: '1' } })
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
     fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await screen.findByRole('spinbutton', { name: 'Monthly Income (ZAR)' })
     expect(asterisks()).toBe(3)
     expect(screen.queryByText(/Optional\. Set a score/)).not.toBeInTheDocument()
+  })
+
+  it('converts employment years and months to total months on submit', async () => {
+    const onSubmit = vi.fn()
+    render(<LoanEligibilityForm onSubmit={onSubmit} products={loanProducts} validationRules={validationRules} />)
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment duration (years)' }), { target: { value: '2' } })
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment duration (months)' }), { target: { value: '6' } })
+    expect(screen.getByRole('spinbutton', { name: 'Employment duration (years)' })).toHaveValue(2)
+    expect(screen.getByRole('spinbutton', { name: 'Employment duration (months)' })).toHaveValue(6)
+    await enterPersonalDetailsExceptDuration()
+    await enterFinancialDetails()
+    fireEvent.click(screen.getByRole('radio', { name: 'Personal Loan' }))
+    for (const [label, option] of [['Loan Term', '24 months'], ['Loan Purpose', 'Home Improvement']] as const) {
+      fireEvent.mouseDown(screen.getByRole('combobox', { name: label }))
+      fireEvent.click(await screen.findByRole('option', { name: option }))
+    }
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Requested Loan Amount (ZAR)' }), { target: { value: '150000' } })
+    fireEvent.submit(screen.getByRole('form', { name: 'Loan eligibility application' }))
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          personalInfo: expect.objectContaining({ employmentDuration: 30 }),
+        }),
+      ),
+    )
   })
 
   it('guides the applicant through the steps before showing the eligibility action', async () => {
