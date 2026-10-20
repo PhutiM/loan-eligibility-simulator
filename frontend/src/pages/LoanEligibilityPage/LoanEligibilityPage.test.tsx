@@ -86,13 +86,13 @@ async function enterValidApplication() {
   await screen.findByRole('form', { name: 'Loan eligibility application' })
   const personalValues = [
     ['Age', '35'],
-    ['Employment Duration (months)', '24'],
   ] as const
   for (const [label, value] of personalValues) {
     fireEvent.change(screen.getByRole('spinbutton', { name: label }), {
       target: { value },
     })
   }
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Employment duration (years)' }), { target: { value: '2' } })
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Employment Status' }))
   fireEvent.click(await screen.findByRole('option', { name: 'Employed' }))
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
