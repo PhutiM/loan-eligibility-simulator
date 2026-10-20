@@ -248,7 +248,7 @@ function LoanEligibilityForm({
       {activeStep === 0 && <FormSection title="Personal Information" icon="person">
         <Box className="grid grid-cols-12 gap-3">
           <Textbox
-            className="col-span-3 max-sm:col-span-12"
+            className="col-span-6 max-sm:col-span-12"
             label="Age"
             required={validationRules.personalInfo.age.required}
             type="number"
@@ -286,7 +286,7 @@ function LoanEligibilityForm({
             render={({ field }) => (
               <Dropdown
                 {...field}
-                className="col-span-3 max-sm:col-span-12"
+                className="col-span-6 max-sm:col-span-12"
                 label="Employment Status"
             required={validationRules.personalInfo.employmentStatus.required}
                 options={employmentOptions}
@@ -326,7 +326,7 @@ function LoanEligibilityForm({
                 text === '' ? '' : String(Math.min(max, Math.max(0, Math.floor(Number(text) || 0))))
 
               return (
-                <Box className="col-span-6 grid gap-1 max-sm:col-span-12">
+                <Box className="col-span-12 grid gap-1">
                   <Box className="grid grid-cols-2 gap-3">
                     <Textbox
                       label="Employment duration (years)"
