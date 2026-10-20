@@ -332,7 +332,6 @@ function LoanEligibilityForm({
                       label="Employment duration (years)"
                       required={validationRules.personalInfo.employmentDuration.required}
                       type="number"
-                      placeholder="0"
                       min={0}
                       value={years}
                       error={Boolean(errors.personalInfo?.employmentDuration)}
@@ -343,7 +342,6 @@ function LoanEligibilityForm({
                     <Textbox
                       label="Employment duration (months)"
                       type="number"
-                      placeholder="0"
                       min={0}
                       max={11}
                       value={months}
