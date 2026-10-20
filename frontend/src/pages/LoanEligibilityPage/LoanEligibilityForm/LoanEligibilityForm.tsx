@@ -158,6 +158,8 @@ function LoanEligibilityForm({
   })
 
   const [activeStep, setActiveStep] = useState(0)
+  const [yearsText, setYearsText] = useState<string>()
+  const [monthsText, setMonthsText] = useState<string>()
   const selectedLoanType = watch('loanDetails.loanType')
   const selectedProduct = products.find(({ id }) => id === selectedLoanType)
   const creditScoreMin = validationRules.financialInfo.creditScore.min ?? 300
@@ -244,8 +246,9 @@ function LoanEligibilityForm({
             </Typography>
 
       {activeStep === 0 && <FormSection title="Personal Information" icon="person">
-        <Box className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
+        <Box className="grid grid-cols-12 gap-3">
           <Textbox
+            className="col-span-6 max-sm:col-span-12"
             label="Age"
             required={validationRules.personalInfo.age.required}
             type="number"
@@ -283,6 +286,7 @@ function LoanEligibilityForm({
             render={({ field }) => (
               <Dropdown
                 {...field}
+                className="col-span-6 max-sm:col-span-12"
                 label="Employment Status"
             required={validationRules.personalInfo.employmentStatus.required}
                 options={employmentOptions}
@@ -304,40 +308,46 @@ function LoanEligibilityForm({
             }}
             render={({ field }) => {
               const totalMonths = field.value
-              const years = totalMonths === undefined ? '' : Math.floor(totalMonths / 12)
-              const months = totalMonths === undefined ? '' : totalMonths % 12
-              const updateDuration = (nextYears: number, nextMonths: number) => {
-                field.onChange(nextYears * 12 + nextMonths)
+              const years =
+                totalMonths === undefined ? '' : (yearsText ?? String(Math.floor(totalMonths / 12)))
+              const months =
+                totalMonths === undefined ? '' : (monthsText ?? String(totalMonths % 12))
+              const updateDuration = (nextYears: string, nextMonths: string) => {
+                setYearsText(nextYears)
+                setMonthsText(nextMonths)
+                field.onChange(
+                  nextYears === '' && nextMonths === ''
+                    ? undefined
+                    : (Number(nextYears) || 0) * 12 + (Number(nextMonths) || 0),
+                )
                 onValuesChange?.()
               }
               const toWhole = (text: string, max: number) =>
-                Math.min(max, Math.max(0, Math.floor(Number(text) || 0)))
+                text === '' ? '' : String(Math.min(max, Math.max(0, Math.floor(Number(text) || 0))))
 
               return (
-                <Box className="col-span-2 grid gap-1 max-sm:col-span-1">
+                <Box className="col-span-12 grid gap-1">
                   <Box className="grid grid-cols-2 gap-3">
                     <Textbox
                       label="Employment duration (years)"
                       required={validationRules.personalInfo.employmentDuration.required}
                       type="number"
-                      placeholder="0"
                       min={0}
                       value={years}
                       error={Boolean(errors.personalInfo?.employmentDuration)}
                       onChange={(event) =>
-                        updateDuration(toWhole(event.target.value, 60), Number(months) || 0)
+                        updateDuration(toWhole(event.target.value, 60), months)
                       }
                     />
                     <Textbox
                       label="Employment duration (months)"
                       type="number"
-                      placeholder="0"
                       min={0}
                       max={11}
                       value={months}
                       error={Boolean(errors.personalInfo?.employmentDuration)}
                       onChange={(event) =>
-                        updateDuration(Number(years) || 0, toWhole(event.target.value, 11))
+                        updateDuration(years, toWhole(event.target.value, 11))
                       }
                     />
                   </Box>
